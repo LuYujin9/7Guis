@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "./App.css";
 import Counter from "./pages/counter.tsx";
 import { Routes, Route } from "react-router-dom";
