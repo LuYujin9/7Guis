@@ -2,21 +2,35 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 export default function TemperatureConverter() {
-  const [celsius, useCelsius] = useState<string>("");
-  const [fahrenheit, useFahrenheit] = useState<string>("");
+  const [celsius, setCelsius] = useState<number | undefined>(undefined);
 
-  function celsiusToFahrenheit(event: any) {
-    useCelsius(event.target.value);
-    const newCelsius = event.target.value;
-    const newFahrenheit = Number(newCelsius) * (9 / 5) + 32;
-    useFahrenheit(event.target.value === "" ? "" : newFahrenheit.toString());
+  function updateFromCelsius(event: React.ChangeEvent<HTMLInputElement>) {
+    setCelsius(event.target.value ? Number(event.target.value) : undefined);
+    console.log(event.target.value);
   }
 
-  function fahrenheitToCelsius(event: any) {
-    useFahrenheit(event.target.value);
-    const newFahrenheit = event.target.value;
-    const newCelsius = (Number(newFahrenheit) - 32) * (5 / 9);
-    useCelsius(event.target.value === "" ? "" : newCelsius.toString());
+  function updateFromFahrenheit(event: React.ChangeEvent<HTMLInputElement>) {
+    console.log(event.target.value);
+    if (event.target.value) {
+      const updatedCelsius = fahrenheitToCelsius(Number(event.target.value));
+      console.log(updatedCelsius);
+      setCelsius(updatedCelsius);
+      return;
+    }
+    setCelsius(undefined);
+  }
+
+  function fahrenheitToCelsius(input: number) {
+    //return (input - 32) * (5 / 9);
+    return Math.floor((input - 32) * (5 / 9) * 100) / 100;
+  }
+
+  function celsiusToFahrenheit(input: number | undefined) {
+    if (input !== undefined) {
+      //return input * (9 / 5) + 32;
+      return Math.floor((input * (9 / 5) + 32) * 100) / 100;
+    }
+    return undefined;
   }
 
   return (
@@ -25,15 +39,19 @@ export default function TemperatureConverter() {
         <input
           type="number"
           id="celsius"
-          value={celsius}
-          onChange={celsiusToFahrenheit}
+          value={celsius !== undefined ? celsius?.toString() : ""}
+          onChange={updateFromCelsius}
         />
         <label htmlFor="celsius">Celsius</label>
         <input
           type="number"
           id="fahrenheit"
-          value={fahrenheit}
-          onChange={fahrenheitToCelsius}
+          value={
+            celsiusToFahrenheit(celsius) !== undefined
+              ? celsiusToFahrenheit(celsius)?.toString()
+              : ""
+          }
+          onChange={updateFromFahrenheit}
         />
         <label htmlFor="fahrenheit">Fahrenheit</label>
       </div>
