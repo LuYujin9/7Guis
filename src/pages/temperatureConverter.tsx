@@ -6,14 +6,14 @@ export default function TemperatureConverter() {
 
   function updateFromCelsius(event: React.ChangeEvent<HTMLInputElement>) {
     setCelsius(event.target.value ? Number(event.target.value) : undefined);
-    console.log(event.target.value);
+    //console.log(event.target.value);
   }
 
   function updateFromFahrenheit(event: React.ChangeEvent<HTMLInputElement>) {
     console.log(event.target.value);
     if (event.target.value) {
       const updatedCelsius = fahrenheitToCelsius(Number(event.target.value));
-      console.log(updatedCelsius);
+      //console.log(updatedCelsius);
       setCelsius(updatedCelsius);
       return;
     }
