@@ -10,11 +10,6 @@ export default function Homepage() {
         <li>
           <NavLink to="/temperatureConverter">Temperature Converter</NavLink>
         </li>
-        <li>
-          <NavLink to="/temperatureConverterTwo">
-            Temperature Converter Two
-          </NavLink>
-        </li>
       </ul>
     </>
   );
