@@ -23,7 +23,11 @@ export default function Practise() {
 
   return (
     <>
-      <input type="text" onChange={handleInput} />
+      <input
+        type="text"
+        value={inputValue ? undefined : inputValue}
+        onChange={handleInput}
+      />
       <button>button</button>
     </>
   );

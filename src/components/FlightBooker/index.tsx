@@ -2,24 +2,27 @@ import { useState } from "react";
 import "./index.css";
 
 export default function FlightBooker() {
-  //type of combobox? string, boolean or context?
   const [combobox, setCombobox] = useState<"one-way" | "return">("one-way");
   const [outboundDate, setOutboundDate] = useState<string | undefined>();
   const [returnDate, setReturnDate] = useState<string | undefined>();
   const [message, setMessage] = useState<string>("");
 
-  //a better name?
   function changeFlightType(event: React.ChangeEvent<HTMLSelectElement>) {
-    if (event.target.value === "return") {
-      setCombobox("return");
-      return;
-    }
-    if (event.target.value === "one-way") {
-      setCombobox("one-way");
+    switch (event.target.value) {
+      case "return":
+        setCombobox("return");
+        return;
+      case "one-way":
+        setCombobox("one-way");
+        setReturnDate(outboundDate);
+        return;
+      default:
+        assertNever(event.target.value);
     }
   }
 
   function updateOutbound(event: React.ChangeEvent<HTMLInputElement>) {
+    console.log(typeof event.target.value, event.target.value);
     if (!event.target.value) {
       setOutboundDate("");
       return;
@@ -52,7 +55,7 @@ export default function FlightBooker() {
         <option value="return">return flight</option>
       </select>
       <input
-        type="text"
+        type="date"
         aria-label="outbound date"
         placeholder="DD.MM.YYYY"
         className={isValidDate(outboundDate) ? "" : "invalid"}
@@ -60,12 +63,10 @@ export default function FlightBooker() {
         onChange={updateOutbound}
       />
       <input
-        type="text"
+        type="date"
         aria-label="return date"
         placeholder="DD.MM.YYYY"
-        className={`${isValidDate(returnDate) ? "" : "invalid"} ${
-          isReturnInputDisable(combobox) ? "disabled" : ""
-        }`}
+        className={`${isValidDate(returnDate) ? "" : "invalid"} `}
         value={returnDate ? returnDate : ""}
         disabled={isReturnInputDisable(combobox)}
         onChange={updateReturn}
@@ -82,67 +83,78 @@ export default function FlightBooker() {
   );
 }
 
-function isReturnInputDisable(input: "one-way" | "return") {
-  if (input === "return") {
-    return false;
-  }
-  if (input === "one-way") {
-    return true;
+function assertNever(value: never | string): never {
+  throw new Error(`value should not exist ${value}`);
+}
+
+function isReturnInputDisable(input: "one-way" | "return"): boolean {
+  switch (input) {
+    case "return":
+      return false;
+    case "one-way":
+      return true;
+    default:
+      assertNever(input);
   }
 }
 
 function isButtonDisabled(
   inputOne: string | undefined,
   inputTwo: string | undefined
-) {
-  if (inputOne === undefined && inputTwo === undefined) {
-    return true;
-  }
-  if (
-    //I habe knew that inputOne and input Two hier can't be undefined,
-    //is there a better way to avoid getting the error, when i don't type inputOne with undefined
-    formatDate(inputOne) <= formatDate(inputTwo) &&
-    isValidDate(inputOne) &&
-    isValidDate(inputTwo)
-  ) {
-    return false;
-  }
-  return true;
+): boolean {
+  return (
+    inputOne === undefined ||
+    inputTwo === undefined ||
+    !isValidDate(inputOne) ||
+    !isValidDate(inputTwo) ||
+    new Date(inputOne).getTime() < new Date(inputTwo).getTime()
+  );
 }
 
-function isValidDate(input: string | undefined) {
+function isValidDate(input: string | undefined): boolean {
   if (input === undefined) {
     return true;
   }
-  if (/^\d{1,2}.\d{1,2}.\d{4}$/.test(input)) {
-    const dateNumber = formatDate(input); //?NaN
-    const currentDateNumber = new Date().getTime(); // the same day is invalid. because of time? tansfer to string to check ?
-    return currentDateNumber <= dateNumber; // is it good? or I should check the situation, that dateNummber ist NaN.
-    //return !isNaN(dateNumber); when it's not a date, not a number  , not not a number return true
-  }
-  return false;
+  const currentDateNumber = new Date().getTime();
+  const inputDate = new Date(input).getTime();
+  //  console.log(inputDate > currentDateNumber);
+  return inputDate > currentDateNumber;
 }
 
-//a better name?
-function formatDate(input: string | undefined) {
-  if (input === undefined) {
-    return NaN;
-  }
-  const formatedInput = formatInput(input);
-  formatedInput.splice(2, 0, ".");
-  const dateString = formatedInput.join("");
-  //   input.slice(3, 5) + "-" + input.slice(0, 2) + "-" + input.slice(6);
-  return new Date(dateString).getTime();
-}
+//   if (input === undefined) {
+//     return true;
+//   }
+// if (/^\d{1,2}.\d{1,2}.\d{4}$/.test(input)) {
+//   const dateNumber = formatDate(input);
+// if (dateNumber === undefined) return false;
+//   return currentDateNumber <= dateNumber;
+// }
+//   return false;
 
-function formatInput(input: string) {
-  const array = input.split("");
-  if (array.findIndex((e) => e === ".") !== 2) {
-    array.unshift("0");
-    array.splice(2, 1);
-  }
-  if (array.findIndex((e) => e === ".") !== 4) {
-    array.splice(2, 0, "0");
-  }
-  return array;
-}
+// //a better name?
+// function formatDate(input: string | undefined): number {
+//   if (input === undefined) {
+//     return NaN;
+//   }
+//   const formatedInput = formatInput(input);
+//   // const day = parseInt(formatedInput[0]);
+//   // const time = new Date(year, month, day);
+//   formatedInput.splice(2, 0, ".");
+//   const dateString = formatedInput.join("");
+//   //   input.slice(3, 5) + "-" + input.slice(0, 2) + "-" + input.slice(6);
+//   const time = new Date(dateString).getTime();
+//   // if (isNaN(time)) return undefined;
+//   return time;
+// }
+
+// function formatInput(input: string): string[] {
+//   const array = input.split("");
+//   if (array.findIndex((e) => e === ".") !== 2) {
+//     array.unshift("0");
+//     array.splice(2, 1);
+//   }
+//   if (array.findIndex((e) => e === ".") !== 4) {
+//     array.splice(2, 0, "0");
+//   }
+//   return array;
+// }
