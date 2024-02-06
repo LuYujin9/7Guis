@@ -107,7 +107,7 @@ function isButtonDisabled(
     inputTwo === undefined ||
     !isValidDate(inputOne) ||
     !isValidDate(inputTwo) ||
-    new Date(inputOne).getTime() < new Date(inputTwo).getTime()
+    new Date(inputOne).getTime() > new Date(inputTwo).getTime()
   );
 }
 
