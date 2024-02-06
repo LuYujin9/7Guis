@@ -54,7 +54,7 @@ export default function FlightBooker() {
       <input
         type="text"
         aria-label="outbound date"
-        placeholder="MM.DD.YYYY"
+        placeholder="DD.MM.YYYY"
         className={isValidDate(outboundDate) ? "" : "invalid"}
         value={outboundDate ? outboundDate : ""}
         onChange={updateOutbound}
@@ -62,7 +62,7 @@ export default function FlightBooker() {
       <input
         type="text"
         aria-label="return date"
-        placeholder="MM.DD.YYYY"
+        placeholder="DD.MM.YYYY"
         className={`${isValidDate(returnDate) ? "" : "invalid"} ${
           isReturnInputDisable(combobox) ? "disabled" : ""
         }`}
@@ -99,6 +99,8 @@ function isButtonDisabled(
     return true;
   }
   if (
+    //I habe knew that inputOne and input Two hier can't be undefined,
+    //is there a better way to avoid getting the error, when i don't type inputOne with undefined
     formatDate(inputOne) <= formatDate(inputTwo) &&
     isValidDate(inputOne) &&
     isValidDate(inputTwo)
@@ -108,14 +110,13 @@ function isButtonDisabled(
   return true;
 }
 
-//***try to update, that "1.2.2023" is also invalid
 function isValidDate(input: string | undefined) {
   if (input === undefined) {
     return true;
   }
-  if (/^\d{2}.\d{2}.\d{4}$/.test(input)) {
+  if (/^\d{1,2}.\d{1,2}.\d{4}$/.test(input)) {
     const dateNumber = formatDate(input); //?NaN
-    const currentDateNumber = new Date().getTime();
+    const currentDateNumber = new Date().getTime(); // the same day is invalid. because of time? tansfer to string to check ?
     return currentDateNumber <= dateNumber; // is it good? or I should check the situation, that dateNummber ist NaN.
     //return !isNaN(dateNumber); when it's not a date, not a number  , not not a number return true
   }
@@ -127,7 +128,21 @@ function formatDate(input: string | undefined) {
   if (input === undefined) {
     return NaN;
   }
-  const dateString =
-    input.slice(3, 5) + "-" + input.slice(0, 2) + "-" + input.slice(6);
+  const formatedInput = formatInput(input);
+  formatedInput.splice(2, 0, ".");
+  const dateString = formatedInput.join("");
+  //   input.slice(3, 5) + "-" + input.slice(0, 2) + "-" + input.slice(6);
   return new Date(dateString).getTime();
+}
+
+function formatInput(input: string) {
+  const array = input.split("");
+  if (array.findIndex((e) => e === ".") !== 2) {
+    array.unshift("0");
+    array.splice(2, 1);
+  }
+  if (array.findIndex((e) => e === ".") !== 4) {
+    array.splice(2, 0, "0");
+  }
+  return array;
 }

@@ -11,7 +11,10 @@ export default function Homepage() {
           <NavLink to="/temperatureConverter">Temperature Converter</NavLink>
         </li>
         <li>
-          <NavLink to="/FlightBookerPage">Flight Booker</NavLink>
+          <NavLink to="/flightBookerPage">Flight Booker</NavLink>
+        </li>
+        <li>
+          <NavLink to="/practise">Practise</NavLink>
         </li>
       </ul>
     </>
