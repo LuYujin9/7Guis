@@ -3,6 +3,7 @@ import "./index.css";
 
 export default function Timer() {
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [inputValue, setInputValue] = useState<number>(3);
   const [duration, setDuration] = useState<number>(3);
   const countRef = useRef(0);
 
@@ -18,7 +19,8 @@ export default function Timer() {
   }, [duration]);
 
   function handleChangeDuration(event: React.ChangeEvent<HTMLInputElement>) {
-    setDuration(Number(event.target.value));
+    setDuration(Number(event.target.value) / 10);
+    setInputValue(Number(event.target.value));
   }
 
   function handleReset() {
@@ -57,8 +59,8 @@ export default function Timer() {
             name="duration"
             className="range-input"
             min={0}
-            max={60}
-            value={duration}
+            max={600}
+            value={inputValue}
             onChange={handleChangeDuration}
           />
         </label>
