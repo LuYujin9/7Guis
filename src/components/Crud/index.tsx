@@ -28,16 +28,24 @@ export default function Crud() {
 
   function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.value) {
-      setfilterValue("");
+      setAllInputEmpty();
       setCurrentId(undefined);
       return;
     }
     const formatFilterValue = formatAsName(event.target.value);
     setfilterValue(formatFilterValue);
     const fullName = searchMatchedName(formatFilterValue, nameList);
-    setCurrentId(fullName ? fullName.id : "");
-    setFrontName(fullName ? fullName.frontName : "");
-    setSurname(fullName ? fullName.surname : "");
+
+    if (fullName) {
+      setCurrentId(fullName.id);
+      setFrontName(fullName.frontName);
+      setSurname(fullName.surname);
+      return;
+    }
+    if (!fullName) {
+      setFrontName("");
+      setSurname(formatFilterValue);
+    }
   }
 
   function handleCreat() {
@@ -51,8 +59,8 @@ export default function Crud() {
       id: uuidv4(),
     };
     setNameList([...nameList, newName]);
-    setFrontName("");
-    setSurname("");
+    setError("");
+    setAllInputEmpty();
   }
 
   function handleUpdate(currentId: string | undefined) {
@@ -60,6 +68,12 @@ export default function Crud() {
       setError("No name selected");
       return;
     }
+    console.log(
+      frontName,
+      isNameInvalid(frontName),
+      surname,
+      isNameInvalid(surname)
+    );
     if (isNameInvalid(frontName) || isNameInvalid(surname)) {
       setError("Please give the richt form of name");
       return;
@@ -77,7 +91,7 @@ export default function Crud() {
         return name;
       });
       setNameList(updatedNameList);
-      setfilterValue("");
+      setAllInputEmpty();
       setError("");
     }
   }
@@ -89,6 +103,7 @@ export default function Crud() {
     }
     const updatedNameList = nameList.filter((name) => name.id !== currentId);
     setNameList(updatedNameList);
+    setAllInputEmpty();
   }
 
   function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
@@ -99,6 +114,12 @@ export default function Crud() {
     event: React.ChangeEvent<HTMLInputElement>
   ) {
     setSurname(event.target.value);
+  }
+
+  function setAllInputEmpty() {
+    setfilterValue("");
+    setFrontName("");
+    setSurname("");
   }
 
   return (
@@ -166,7 +187,7 @@ function formatAsName(input: string) {
 }
 
 function isNameInvalid(input: string) {
-  const regex = /[a-z]/g;
+  const regex = /^[a-zA-Z]+$/g;
   return !regex.test(input);
 }
 
