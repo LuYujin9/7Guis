@@ -1,0 +1,7 @@
+.name-list {
+  width: 12em;
+  height: 10em;
+  border: solid 1px black;
+  display: flex;
+  flex-direction: column;
+}

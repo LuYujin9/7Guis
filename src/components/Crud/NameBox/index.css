@@ -1,0 +1,14 @@
+.name-box {
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.name {
+  margin-left: 0.5em;
+}
+
+.current-name-box {
+  background-color: blue;
+  color: white;
+}

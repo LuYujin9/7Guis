@@ -10,6 +10,9 @@ export default function Homepage() {
         <li>
           <NavLink to="/temperatureConverter">Temperature Converter</NavLink>
         </li>
+        <li>
+          <NavLink to="/crudPage">crud page</NavLink>
+        </li>
       </ul>
     </>
   );
