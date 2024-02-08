@@ -1,5 +1,5 @@
 type props = {
-  fullName: { name: string; surname: string; id: string };
+  fullName: { frontName: string; surname: string; id: string };
   currentId: string | undefined;
 };
 
@@ -12,7 +12,7 @@ export default function NameBox({ fullName, currentId }: props) {
           : "text-left pl-2"
       }
     >
-      {fullName.name}, {fullName.surname}
+      {fullName.frontName}, {fullName.surname}
     </p>
   );
 }

@@ -1,27 +1,28 @@
 import { useState } from "react";
 import NameBox from "./NameBox";
+import { v4 as uuidv4 } from "uuid";
 
-type nameList = {
-  name: string;
+type fullName = {
+  frontName: string;
   surname: string;
   id: string;
-}[];
+};
 
-const initialNameList: nameList = [
-  { name: "Emil", surname: "Hans", id: "0" },
-  { name: "Mustername", surname: "Ma", id: "1" },
-  { name: "Tisch", surname: "Roman", id: "2" },
-  { name: "Tisch", surname: "Max", id: "3" },
+const initialNameList: fullName[] = [
+  { frontName: "Jane", surname: "Davis", id: "0" },
+  { frontName: "John", surname: "Wilson", id: "1" },
+  { frontName: "Tisch", surname: "Roman", id: "2" },
+  { frontName: "Isabella", surname: "White", id: "3" },
 ]; //让id强行等于index,但是不好.
 export default function Crud() {
-  const [nameList, setNameList] = useState<nameList>(initialNameList);
+  const [nameList, setNameList] = useState<fullName[]>(initialNameList);
   const [filterValue, setfilterValue] = useState<string>("");
-  const [name, setName] = useState<string>("");
+  const [frontName, setFrontName] = useState<string>("");
   const [surname, setSurname] = useState<string>("");
   const [currentId, setCurrentId] = useState<string | undefined>();
   const [error, setError] = useState<string>("");
 
-  const inputStyle = "border border-black m-2 rounded";
+  const inputStyle = "w-20 border border-black m-2 rounded";
   const buttonStyle =
     "bg-blue-300 hover:bg-emphasis hover:text-white text-gray-700 font-bold py-2 px-4 rounded";
 
@@ -33,21 +34,25 @@ export default function Crud() {
     }
     const formatFilterValue = formatAsName(event.target.value);
     setfilterValue(formatFilterValue);
-    const id = searchMatchedId(formatFilterValue, nameList);
-    setCurrentId(id);
+    const fullName = searchMatchedName(formatFilterValue, nameList);
+    setCurrentId(fullName ? fullName.id : "");
+    setFrontName(fullName ? fullName.frontName : "");
+    setSurname(fullName ? fullName.surname : "");
   }
 
   function handleCreat() {
-    if (isNameInvalid(name) || isNameInvalid(surname)) {
+    if (isNameInvalid(frontName) || isNameInvalid(surname)) {
       setError("Please give the richt form of name");
       return;
     }
     const newName = {
-      name: formatAsName(name),
+      frontName: formatAsName(frontName),
       surname: formatAsName(surname),
-      id: generateUniqueId(nameList),
+      id: uuidv4(),
     };
     setNameList([...nameList, newName]);
+    setFrontName("");
+    setSurname("");
   }
 
   function handleUpdate(currentId: string | undefined) {
@@ -55,13 +60,13 @@ export default function Crud() {
       setError("No name selected");
       return;
     }
-    if (isNameInvalid(name) || isNameInvalid(surname)) {
+    if (isNameInvalid(frontName) || isNameInvalid(surname)) {
       setError("Please give the richt form of name");
       return;
     }
-    if (currentId && name && surname) {
+    if (currentId && frontName && surname) {
       const updatedName = {
-        name: formatAsName(name),
+        frontName: formatAsName(frontName),
         surname: formatAsName(surname),
         id: currentId,
       };
@@ -72,6 +77,7 @@ export default function Crud() {
         return name;
       });
       setNameList(updatedNameList);
+      setfilterValue("");
       setError("");
     }
   }
@@ -86,7 +92,7 @@ export default function Crud() {
   }
 
   function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
+    setFrontName(event.target.value);
   }
 
   function handleChangeSurnameInput(
@@ -106,7 +112,7 @@ export default function Crud() {
           onChange={handleFilterChange}
         />
       </label>
-      <div className="w-80 h-40 border border-black">
+      <div className="w-80 h-40 border border-black overflow-y-scroll">
         {nameList.map((fullName) => {
           return (
             <NameBox
@@ -123,7 +129,7 @@ export default function Crud() {
           <input
             className={inputStyle}
             type="text"
-            value={name}
+            value={frontName}
             onChange={handleChangeNameInput}
           />
         </label>
@@ -164,16 +170,10 @@ function isNameInvalid(input: string) {
   return !regex.test(input);
 }
 
-//useId 的解决方法?
-function generateUniqueId(inputArray: nameList) {
-  const id = inputArray.length.toString();
-  return id;
-}
-
-function searchMatchedId(input: string, list: nameList): string | undefined {
+function searchMatchedName(
+  input: string,
+  list: fullName[]
+): fullName | undefined {
   const name = list.find((name) => name.surname.startsWith(input));
-  if (name) {
-    return name.id;
-  }
-  return undefined;
+  return name ? name : undefined;
 }
