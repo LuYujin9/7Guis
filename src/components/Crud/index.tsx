@@ -1,6 +1,5 @@
 import { useState } from "react";
 import NameBox from "./NameBox";
-import "./index.css";
 
 type nameList = {
   name: string;
