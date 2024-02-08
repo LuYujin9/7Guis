@@ -10,32 +10,41 @@ type nameList = {
 
 const initialNameList: nameList = [
   { name: "Emil", surname: "Hans", id: "0" },
-  { name: "Mustername", surname: "Max", id: "1" },
+  { name: "Mustername", surname: "Ma", id: "1" },
   { name: "Tisch", surname: "Roman", id: "2" },
+  { name: "Tisch", surname: "Max", id: "3" },
 ]; //让id强行等于index,但是不好.
 export default function Crud() {
   const [nameList, setNameList] = useState<nameList>(initialNameList);
-  const [filterInputValue, setFilterInputValue] = useState<string>("");
+  const [filterValue, setfilterValue] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [surname, setSurname] = useState<string>("");
-  const [currentId, setCurrentId] = useState<string | undefined>("");
+  const [currentId, setCurrentId] = useState<string | undefined>();
   const [error, setError] = useState<string>("");
 
   function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setFilterInputValue(event.target.name);
-    // const surnameList = nameList.map((name) => {
-    //   return name.surname;
-    // });
-    // console.log(surnameList);
-  }
-  function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
+    if (!event.target.value) {
+      setfilterValue("");
+      setCurrentId(undefined);
+      return;
+    }
+    const formatFilterValue = formatAsName(event.target.value);
+    setfilterValue(formatFilterValue);
+    const id = searchMatchedId(formatFilterValue, nameList);
+    setCurrentId(id);
   }
 
-  function handleChangeSurnameInput(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    setSurname(event.target.value);
+  function handleCreat() {
+    if (isNameInvalid(name) || isNameInvalid(surname)) {
+      setError("Please give the richt form of name");
+      return;
+    }
+    const newName = {
+      name: formatAsName(name),
+      surname: formatAsName(surname),
+      id: generateUniqueId(nameList),
+    };
+    setNameList([...nameList, newName]);
   }
 
   function handleUpdate(currentId: string | undefined) {
@@ -43,14 +52,14 @@ export default function Crud() {
       setError("No name selected");
       return;
     }
-    if (!name || !surname) {
+    if (isNameInvalid(name) || isNameInvalid(surname)) {
       setError("Please give the richt form of name");
       return;
     }
     if (currentId && name && surname) {
       const updatedName = {
-        name: name,
-        surname: surname,
+        name: formatAsName(name),
+        surname: formatAsName(surname),
         id: currentId,
       };
       const updatedNameList = nameList.map((name) => {
@@ -73,12 +82,26 @@ export default function Crud() {
     setNameList(updatedNameList);
   }
 
+  function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
+    setName(event.target.value);
+  }
+
+  function handleChangeSurnameInput(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    setSurname(event.target.value);
+  }
+
   return (
     <>
       <div>
         <label>
           Filter prefix:
-          <input type="text" onChange={handleFilterChange} />
+          <input
+            type="text"
+            value={filterValue}
+            onChange={handleFilterChange}
+          />
         </label>
       </div>
       <div className="name-list">
@@ -107,11 +130,36 @@ export default function Crud() {
         </label>
       </div>
       <div>
-        <button>Creat</button>
+        <button onClick={() => handleCreat()}>Creat</button>
         <button onClick={() => handleUpdate(currentId)}>Update</button>
         <button onClick={() => handleDelete(currentId)}>Delete</button>
       </div>
       <p>{error}</p>
     </>
   );
+}
+
+function formatAsName(input: string) {
+  const firstLetter = input[0].toUpperCase();
+  const otherLetters = input.slice(1).toLowerCase();
+  return firstLetter + otherLetters;
+}
+
+function isNameInvalid(input: string) {
+  const regex = /[a-z]/g;
+  return !regex.test(input);
+}
+
+//useId 的解决方法?
+function generateUniqueId(inputArray: nameList) {
+  const id = inputArray.length.toString();
+  return id;
+}
+
+function searchMatchedId(input: string, list: nameList): string | undefined {
+  const name = list.find((name) => name.surname.startsWith(input));
+  if (name) {
+    return name.id;
+  }
+  return undefined;
 }
