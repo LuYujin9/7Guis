@@ -22,6 +22,10 @@ export default function Crud() {
   const [currentId, setCurrentId] = useState<string | undefined>();
   const [error, setError] = useState<string>("");
 
+  const inputStyle = "border border-black m-2 rounded";
+  const buttonStyle =
+    "bg-blue-300 hover:bg-emphasis hover:text-white text-gray-700 font-bold py-2 px-4 rounded";
+
   function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.value) {
       setfilterValue("");
@@ -93,18 +97,17 @@ export default function Crud() {
   }
 
   return (
-    <>
-      <div>
-        <label>
-          Filter prefix:
-          <input
-            type="text"
-            value={filterValue}
-            onChange={handleFilterChange}
-          />
-        </label>
-      </div>
-      <div className="name-list">
+    <div>
+      <label>
+        Filter prefix:
+        <input
+          className={inputStyle}
+          type="text"
+          value={filterValue}
+          onChange={handleFilterChange}
+        />
+      </label>
+      <div className="w-80 h-40 border border-black">
         {nameList.map((fullName) => {
           return (
             <NameBox
@@ -118,11 +121,17 @@ export default function Crud() {
       <div>
         <label>
           Name:
-          <input type="text" value={name} onChange={handleChangeNameInput} />
+          <input
+            className={inputStyle}
+            type="text"
+            value={name}
+            onChange={handleChangeNameInput}
+          />
         </label>
         <label>
           Surname:
           <input
+            className={inputStyle}
             type="text"
             value={surname}
             onChange={handleChangeSurnameInput}
@@ -130,12 +139,18 @@ export default function Crud() {
         </label>
       </div>
       <div>
-        <button onClick={() => handleCreat()}>Creat</button>
-        <button onClick={() => handleUpdate(currentId)}>Update</button>
-        <button onClick={() => handleDelete(currentId)}>Delete</button>
+        <button className={buttonStyle} onClick={() => handleCreat()}>
+          Creat
+        </button>
+        <button className={buttonStyle} onClick={() => handleUpdate(currentId)}>
+          Update
+        </button>
+        <button className={buttonStyle} onClick={() => handleDelete(currentId)}>
+          Delete
+        </button>
       </div>
       <p>{error}</p>
-    </>
+    </div>
   );
 }
 
