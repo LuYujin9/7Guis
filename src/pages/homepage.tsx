@@ -13,6 +13,12 @@ export default function Homepage() {
         <li>
           <NavLink to="/crudPage">crud page</NavLink>
         </li>
+        <li>
+          <NavLink to="/timerPage">Timer</NavLink>
+        </li>
+        <li>
+          <NavLink to="/flightBookerPage">Flight Booker</NavLink>
+        </li>
       </ul>
     </>
   );
