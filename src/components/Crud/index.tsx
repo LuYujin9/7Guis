@@ -121,7 +121,7 @@ export default function Crud() {
   }
 
   return (
-    <div>
+    <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5 md:w-auto md:bg-green-100 lg:w-4/5 lg:w-auto lg:bg-red-100">
       <label>
         Filter prefix:
         <input
@@ -131,7 +131,7 @@ export default function Crud() {
           onChange={handleFilterChange}
         />
       </label>
-      <div className="w-80 h-40 border border-black overflow-y-scroll">
+      <div className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll ">
         {nameList.map((fullName) => {
           return (
             <NameBox

@@ -25,18 +25,24 @@ export default function TemperatureConverter({ id }: props) {
   }
 
   return (
-    <div className="temperature-converter" id={id}>
+    <div
+      className="flex flex-col w-150  m-auto mt-3 rounded bg-blue-100  sm:w-100 sm:flex-row sm:bg-green-100 "
+      //priority? 无论在bg-blue-100 前或后加入 都会呈现红色
+      id={id}
+    >
       <label className="input-area">
         <input
+          className="flex-auto m-2 w-20 rounded border border-black"
           type="number"
           value={values.celsius === undefined ? "" : values.celsius}
           onChange={updateFromCelsius}
         />
         Celsius
       </label>
-      <p>=</p>
+      <p className="m-auto">=</p>
       <label className="input-area">
         <input
+          className="flex-auto m-2 w-20 rounded border border-black"
           type="number"
           value={values.fahrenheit === undefined ? "" : values.fahrenheit}
           onChange={updateFromFahrenheit}
