@@ -1,10 +1,6 @@
 import { useState } from "react";
 
-type props = {
-  id: string;
-};
-
-export function TemperatureConverter({ id }: props) {
+export function TemperatureConverter({ id }: { id: string }) {
   const [values, setFahrenheit, setCelsius] = useSyncedState();
 
   function updateFromCelsius(event: React.ChangeEvent<HTMLInputElement>) {
