@@ -30,6 +30,7 @@ export default function TemperatureConverter({ id }: props) {
         <input
           type="number"
           value={values.celsius === undefined ? "" : values.celsius}
+          className="temInput"
           onChange={updateFromCelsius}
         />
         Celsius
@@ -39,6 +40,7 @@ export default function TemperatureConverter({ id }: props) {
         <input
           type="number"
           value={values.fahrenheit === undefined ? "" : values.fahrenheit}
+          className="temInput"
           onChange={updateFromFahrenheit}
         />
         Fahrenheit
