@@ -13,7 +13,8 @@ const initialNameList: fullName[] = [
   { frontName: "John", surname: "Wilson", id: "1" },
   { frontName: "Tisch", surname: "Roman", id: "2" },
   { frontName: "Isabella", surname: "White", id: "3" },
-]; //让id强行等于index,但是不好.
+];
+
 export default function Crud() {
   const [nameList, setNameList] = useState<fullName[]>(initialNameList);
   const [filterValue, setfilterValue] = useState<string>("");
@@ -21,10 +22,6 @@ export default function Crud() {
   const [surname, setSurname] = useState<string>("");
   const [currentId, setCurrentId] = useState<string | undefined>();
   const [error, setError] = useState<string>("");
-
-  const inputStyle = "w-20 border border-black m-2 rounded";
-  const buttonStyle =
-    "bg-blue-300 hover:bg-emphasis hover:text-white text-gray-700 font-bold py-2 px-4 rounded";
 
   function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.value) {
@@ -45,6 +42,7 @@ export default function Crud() {
     if (!fullName) {
       setFrontName("");
       setSurname(formatFilterValue);
+      setCurrentId("");
     }
   }
 
@@ -127,7 +125,7 @@ export default function Crud() {
       <label>
         Filter prefix:
         <input
-          className={inputStyle}
+          className="m-2 w-20 rounded border border-black"
           type="text"
           value={filterValue}
           onChange={handleFilterChange}
@@ -148,7 +146,7 @@ export default function Crud() {
         <label>
           Name:
           <input
-            className={inputStyle}
+            className="m-2 w-20 rounded border border-black"
             type="text"
             value={frontName}
             onChange={handleChangeNameInput}
@@ -157,7 +155,7 @@ export default function Crud() {
         <label>
           Surname:
           <input
-            className={inputStyle}
+            className="m-2 w-20 rounded border border-black"
             type="text"
             value={surname}
             onChange={handleChangeSurnameInput}
@@ -165,13 +163,22 @@ export default function Crud() {
         </label>
       </div>
       <div>
-        <button className={buttonStyle} onClick={() => handleCreat()}>
+        <button
+          className="py-2 px-4 rounded bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+          onClick={() => handleCreat()}
+        >
           Creat
         </button>
-        <button className={buttonStyle} onClick={() => handleUpdate(currentId)}>
+        <button
+          className="py-2 px-4 rounded bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+          onClick={() => handleUpdate(currentId)}
+        >
           Update
         </button>
-        <button className={buttonStyle} onClick={() => handleDelete(currentId)}>
+        <button
+          className="py-2 px-4 rounded bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+          onClick={() => handleDelete(currentId)}
+        >
           Delete
         </button>
       </div>
