@@ -12,6 +12,9 @@ export default function Homepage() {
         </li>
         <li>
           <NavLink to="/timerPage">Timer</NavLink>
+          <NavLink to="/flightBookerPage">Flight Booker</NavLink>
+        </li>
+
         </li>
       </ul>
     </>
