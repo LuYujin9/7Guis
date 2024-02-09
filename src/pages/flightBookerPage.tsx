@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
-import FlightBooker from "../components/FlightBooker";
+import { FlightBooker } from "../components/FlightBooker";
 
-export default function FlightBookerPage() {
+export function FlightBookerPage() {
   return (
     <>
       <FlightBooker />

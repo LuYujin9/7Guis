@@ -4,7 +4,7 @@ type props = {
   id: string;
 };
 
-export default function TemperatureConverter({ id }: props) {
+export function TemperatureConverter({ id }: props) {
   const [values, setFahrenheit, setCelsius] = useSyncedState();
 
   function updateFromCelsius(event: React.ChangeEvent<HTMLInputElement>) {
@@ -25,23 +25,23 @@ export default function TemperatureConverter({ id }: props) {
 
   return (
     <div
-      className="flex flex-col w-150  m-auto mt-3 rounded bg-blue-100  sm:w-100 sm:flex-row sm:bg-green-100 "
-      //priority? 无论在bg-blue-100 前或后加入 都会呈现红色
+      className="flex flex-col w-[15rem] m-auto mt-3 rounded bg-blue-100 sm:flex-row sm:w-[25rem] sm:p-3 sm:bg-green-100 "
+      //priority? 无论在bg-blue-100 前或后加入 bg-red-100 都会呈现红色
       id={id}
     >
-      <label className="input-area">
+      <label className="flex-auto">
         <input
-          className="flex-auto m-2 w-20 rounded border border-black"
+          className=" m-2 w-20 rounded border border-black"
           type="number"
           value={values.celsius === undefined ? "" : values.celsius}
           onChange={updateFromCelsius}
         />
         Celsius
       </label>
-      <p className="m-auto">=</p>
-      <label className="input-area">
+      <p className="flex-auto m-auto ">=</p>
+      <label className="flex-auto">
         <input
-          className="flex-auto m-2 w-20 rounded border border-black"
+          className="m-2 w-20 rounded border border-black"
           type="number"
           value={values.fahrenheit === undefined ? "" : values.fahrenheit}
           onChange={updateFromFahrenheit}

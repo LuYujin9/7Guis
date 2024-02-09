@@ -1,8 +1,8 @@
 import { NavLink } from "react-router-dom";
-import TemperatureConverter from "../components/TemperatureConverter";
+import { TemperatureConverter } from "../components/TemperatureConverter";
 import { useId } from "react";
 
-export default function TemperatureConverterPage() {
+export function TemperatureConverterPage() {
   return (
     <>
       <TemperatureConverter id={useId()} />

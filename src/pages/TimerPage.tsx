@@ -1,5 +1,11 @@
-import Timer from "../components/Timer";
+import { NavLink } from "react-router-dom";
+import { Timer } from "../components/Timer";
 
-export default function TimerPage() {
-  return <Timer />;
+export function TimerPage() {
+  return (
+    <>
+      <Timer />
+      <NavLink to="/">Back to homepage</NavLink>
+    </>
+  );
 }

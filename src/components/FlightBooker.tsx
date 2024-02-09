@@ -1,7 +1,6 @@
 import { useState } from "react";
-import "./index.css";
 
-export default function FlightBooker() {
+export function FlightBooker() {
   const [combobox, setCombobox] = useState<"one-way" | "return">("one-way");
   const [outboundDate, setOutboundDate] = useState<string | undefined>();
   const [returnDate, setReturnDate] = useState<string | undefined>();

@@ -1,22 +1,21 @@
 import { useState } from "react";
-import NameBox from "./NameBox";
 import { v4 as uuidv4 } from "uuid";
 
-type fullName = {
+type FullName = {
   frontName: string;
   surname: string;
   id: string;
 };
 
-const initialNameList: fullName[] = [
+const initialNameList: FullName[] = [
   { frontName: "Jane", surname: "Davis", id: "0" },
   { frontName: "John", surname: "Wilson", id: "1" },
   { frontName: "Tisch", surname: "Roman", id: "2" },
   { frontName: "Isabella", surname: "White", id: "3" },
 ];
 
-export default function Crud() {
-  const [nameList, setNameList] = useState<fullName[]>(initialNameList);
+export function Crud() {
+  const [nameList, setNameList] = useState<FullName[]>(initialNameList);
   const [filterValue, setfilterValue] = useState<string>("");
   const [frontName, setFrontName] = useState<string>("");
   const [surname, setSurname] = useState<string>("");
@@ -155,7 +154,7 @@ export default function Crud() {
         <label>
           Surname:
           <input
-            className="m-2 w-20 rounded border border-black"
+            className="m-auto w-20 rounded border border-black"
             type="text"
             value={surname}
             onChange={handleChangeSurnameInput}
@@ -164,19 +163,19 @@ export default function Crud() {
       </div>
       <div>
         <button
-          className="py-2 px-4 rounded bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
           onClick={() => handleCreat()}
         >
           Creat
         </button>
         <button
-          className="py-2 px-4 rounded bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
           onClick={() => handleUpdate(currentId)}
         >
           Update
         </button>
         <button
-          className="py-2 px-4 rounded bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
           onClick={() => handleDelete(currentId)}
         >
           Delete
@@ -200,8 +199,28 @@ function isNameInvalid(input: string) {
 
 function searchMatchedName(
   input: string,
-  list: fullName[]
-): fullName | undefined {
+  list: FullName[]
+): FullName | undefined {
   const name = list.find((name) => name.surname.startsWith(input));
   return name ? name : undefined;
+}
+
+type props = {
+  fullName: FullName;
+  currentId: string | undefined;
+};
+
+//fullName: FullName, currentId: string | undefined
+function NameBox({ fullName, currentId }: props) {
+  return (
+    <p
+      className={
+        fullName.id === currentId
+          ? "text-left pl-2 bg-emphasis text-gray-100"
+          : "text-left pl-2"
+      }
+    >
+      {fullName.frontName}, {fullName.surname}
+    </p>
+  );
 }

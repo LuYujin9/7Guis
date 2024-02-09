@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
-import Crud from "../components/Crud";
+import { Crud } from "../components/Crud";
 
-export default function CrudPage() {
+export function CrudPage() {
   return (
     <>
       <Crud />
