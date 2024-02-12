@@ -34,7 +34,10 @@ export function Crud() {
 
   useEffect(() => {
     setInputValuesBySelectedId(selectedId, currentNameList);
+    // console.log("updated by selectedId");
   }, [selectedId]);
+
+  // console.log("re-rendered");
 
   function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.value) {
@@ -46,6 +49,7 @@ export function Crud() {
     setfilterValue(formatFilterValue);
     const matchedNames = filterNamesBySurname(formatFilterValue, nameList);
     setCurrentNameList(matchedNames);
+    setSelectedId(undefined);
   }
 
   function handleCreat() {
@@ -61,6 +65,7 @@ export function Crud() {
     };
     setNameList([...nameList, newName]);
     setCurrentNameList([...nameList, newName]);
+    // is there a way to re-render only in one time? is it necessary
     setfilterValue("");
     setSelectedId(id);
     setMessage("The name is created");
@@ -148,15 +153,11 @@ export function Crud() {
         className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
         size={10}
         onChange={handleSelectName}
+        value={selectedId ?? undefined}
+        //didn't re-rendered, when selectedId changed to undefined
       >
         {currentNameList.map((fullName) => {
-          return (
-            <NameBox
-              key={fullName.id}
-              fullName={fullName}
-              selectedId={selectedId}
-            />
-          );
+          return <NameBox key={fullName.id} fullName={fullName} />;
         })}
       </select>
       <div>
@@ -227,19 +228,9 @@ function findNameById(nameList: FullName[], id: string | undefined) {
   return nameList.find((name) => name.id === id);
 }
 
-function NameBox({
-  fullName,
-  selectedId,
-}: {
-  fullName: FullName;
-  selectedId: string | undefined;
-}) {
+function NameBox({ fullName }: { fullName: FullName }) {
   return (
-    <option
-      className="text-left pl-2"
-      value={fullName.id}
-      selected={fullName.id === selectedId ? true : false}
-    >
+    <option className="text-left pl-2" value={fullName.id}>
       {fullName.frontName}, {fullName.surname}
     </option>
   );
