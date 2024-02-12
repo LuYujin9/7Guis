@@ -7,9 +7,9 @@ export function Timer() {
 
   useInterval(duration);
 
-  function handleElapsedTime() {
-    setElapsedTime((prevSeconds) => prevSeconds + 1); //callback function , 所以它是从内向外的运算,运算使用的是内部return的值,所以不会受state的初始值影响
-  }
+  // function handleElapsedTime() {
+  //   setElapsedTime((prevSeconds) => prevSeconds + 1); //callback function , 所以它是从内向外的运算,运算使用的是内部return的值,所以不会受state的初始值影响
+  // }
 
   function handleChangeDuration(event: React.ChangeEvent<HTMLInputElement>) {
     setDuration(Number(event.target.value) / 10);
