@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 type FullName = {
@@ -12,111 +12,125 @@ const initialNameList: FullName[] = [
   { frontName: "John", surname: "Wilson", id: "1" },
   { frontName: "Tisch", surname: "Roman", id: "2" },
   { frontName: "Isabella", surname: "White", id: "3" },
+  { frontName: "Jane", surname: "Davis", id: "4" },
+  { frontName: "John", surname: "Wilson", id: "5" },
+  { frontName: "Tisch", surname: "Roman", id: "6" },
+  { frontName: "Isabella", surname: "White", id: "7" },
+  { frontName: "Jane", surname: "Davis", id: "8" },
+  { frontName: "John", surname: "Wilson", id: "9" },
+  { frontName: "Tisch", surname: "Roman", id: "10" },
+  { frontName: "Isabella", surname: "White", id: "11" },
 ];
 
 export function Crud() {
   const [nameList, setNameList] = useState<FullName[]>(initialNameList);
+  const [currentNameList, setCurrentNameList] =
+    useState<FullName[]>(initialNameList);
   const [filterValue, setfilterValue] = useState<string>("");
   const [frontName, setFrontName] = useState<string>("");
   const [surname, setSurname] = useState<string>("");
-  const [currentId, setCurrentId] = useState<string | undefined>();
-  const [error, setError] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [message, setMessage] = useState<string>("");
+
+  useEffect(() => {
+    setInputValuesBySelectedId(selectedId, currentNameList);
+  }, [selectedId]);
 
   function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.value) {
-      setAllInputEmpty();
-      setCurrentId(undefined);
+      setfilterValue("");
+      setCurrentNameList(nameList);
       return;
     }
     const formatFilterValue = formatAsName(event.target.value);
     setfilterValue(formatFilterValue);
-    const fullName = searchMatchedName(formatFilterValue, nameList);
-
-    if (fullName) {
-      setCurrentId(fullName.id);
-      setFrontName(fullName.frontName);
-      setSurname(fullName.surname);
-      return;
-    }
-    if (!fullName) {
-      setFrontName("");
-      setSurname(formatFilterValue);
-      setCurrentId("");
-    }
+    const matchedNames = filterNamesBySurname(formatFilterValue, nameList);
+    setCurrentNameList(matchedNames);
   }
 
   function handleCreat() {
     if (isNameInvalid(frontName) || isNameInvalid(surname)) {
-      setError("Please give the richt form of name");
+      setMessage("Please give the richt form of name");
       return;
     }
+    const id = uuidv4();
     const newName = {
-      frontName: formatAsName(frontName),
-      surname: formatAsName(surname),
-      id: uuidv4(),
+      frontName: frontName,
+      surname: surname,
+      id: id,
     };
     setNameList([...nameList, newName]);
-    setError("");
-    setAllInputEmpty();
+    setCurrentNameList([...nameList, newName]);
+    setfilterValue("");
+    setSelectedId(id);
+    setMessage("The name is created");
   }
 
-  function handleUpdate(currentId: string | undefined) {
-    if (!currentId) {
-      setError("No name selected");
+  function handleUpdate(selectedId: string | undefined) {
+    if (!selectedId) {
+      setMessage("No name is selected");
       return;
     }
-    console.log(
-      frontName,
-      isNameInvalid(frontName),
-      surname,
-      isNameInvalid(surname)
-    );
     if (isNameInvalid(frontName) || isNameInvalid(surname)) {
-      setError("Please give the richt form of name");
+      setMessage("Please give the richt form of name");
       return;
     }
-    if (currentId && frontName && surname) {
+    if (selectedId && frontName && surname) {
       const updatedName = {
-        frontName: formatAsName(frontName),
-        surname: formatAsName(surname),
-        id: currentId,
+        frontName: frontName,
+        surname: surname,
+        id: selectedId,
       };
       const updatedNameList = nameList.map((name) => {
-        if (name.id === currentId) {
-          return updatedName;
-        }
-        return name;
+        return name.id === selectedId ? updatedName : name;
       });
       setNameList(updatedNameList);
-      setAllInputEmpty();
-      setError("");
+      setCurrentNameList(updatedNameList);
+      setfilterValue("");
+      setMessage("The name is updated");
     }
   }
 
-  function handleDelete(currentId: string | undefined) {
-    if (!currentId) {
-      setError("No name selected");
+  function handleDelete(selectedId: string | undefined) {
+    if (!selectedId) {
+      setMessage("No name selected");
       return;
     }
-    const updatedNameList = nameList.filter((name) => name.id !== currentId);
+    const updatedNameList = nameList.filter((name) => name.id !== selectedId);
     setNameList(updatedNameList);
-    setAllInputEmpty();
+    setCurrentNameList(updatedNameList);
+    setSelectedId(undefined);
+    setfilterValue("");
+    setMessage("The name is deleted");
   }
 
   function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
-    setFrontName(event.target.value);
+    setFrontName(formatAsName(event.target.value));
   }
 
   function handleChangeSurnameInput(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-    setSurname(event.target.value);
+    setSurname(formatAsName(event.target.value));
   }
 
-  function setAllInputEmpty() {
-    setfilterValue("");
-    setFrontName("");
-    setSurname("");
+  function handleSelectName(event: React.ChangeEvent<HTMLSelectElement>) {
+    setSelectedId(event.target.value);
+  }
+
+  //name?
+  function setInputValuesBySelectedId(
+    selectedId: string | undefined,
+    nameList: FullName[]
+  ) {
+    const selectedName = findNameById(nameList, selectedId);
+    if (!selectedName) {
+      setFrontName("");
+      setSurname("");
+      return;
+    }
+    setFrontName(selectedName.frontName);
+    setSurname(selectedName.surname);
   }
 
   return (
@@ -130,17 +144,21 @@ export function Crud() {
           onChange={handleFilterChange}
         />
       </label>
-      <div className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll ">
-        {nameList.map((fullName) => {
+      <select
+        className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
+        size={10}
+        onChange={handleSelectName}
+      >
+        {currentNameList.map((fullName) => {
           return (
             <NameBox
               key={fullName.id}
               fullName={fullName}
-              currentId={currentId}
+              selectedId={selectedId}
             />
           );
         })}
-      </div>
+      </select>
       <div>
         <label>
           Name:
@@ -170,23 +188,26 @@ export function Crud() {
         </button>
         <button
           className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleUpdate(currentId)}
+          onClick={() => handleUpdate(selectedId)}
         >
           Update
         </button>
         <button
           className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleDelete(currentId)}
+          onClick={() => handleDelete(selectedId)}
         >
           Delete
         </button>
       </div>
-      <p>{error}</p>
+      <p>{message}</p>
     </div>
   );
 }
 
 function formatAsName(input: string) {
+  if (!input) {
+    return "";
+  }
   const firstLetter = input[0].toUpperCase();
   const otherLetters = input.slice(1).toLowerCase();
   return firstLetter + otherLetters;
@@ -197,30 +218,29 @@ function isNameInvalid(input: string) {
   return !regex.test(input);
 }
 
-function searchMatchedName(
-  input: string,
-  list: FullName[]
-): FullName | undefined {
-  const name = list.find((name) => name.surname.startsWith(input));
-  return name ? name : undefined;
+function filterNamesBySurname(input: string, list: FullName[]): FullName[] {
+  const names = list.filter((name) => name.surname.startsWith(input));
+  return names;
 }
 
-type props = {
-  fullName: FullName;
-  currentId: string | undefined;
-};
+function findNameById(nameList: FullName[], id: string | undefined) {
+  return nameList.find((name) => name.id === id);
+}
 
-//fullName: FullName, currentId: string | undefined
-function NameBox({ fullName, currentId }: props) {
+function NameBox({
+  fullName,
+  selectedId,
+}: {
+  fullName: FullName;
+  selectedId: string | undefined;
+}) {
   return (
-    <p
-      className={
-        fullName.id === currentId
-          ? "text-left pl-2 bg-emphasis text-gray-100"
-          : "text-left pl-2"
-      }
+    <option
+      className="text-left pl-2"
+      value={fullName.id}
+      selected={fullName.id === selectedId ? true : false}
     >
       {fullName.frontName}, {fullName.surname}
-    </p>
+    </option>
   );
 }
