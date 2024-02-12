@@ -2,14 +2,14 @@ import { useEffect, useState, useRef } from "react";
 
 export function Timer() {
   const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const [inputValue, setInputValue] = useState<number>(3);
-  const [duration, setDuration] = useState<number>(3);
+  const [inputValue, setInputValue] = useState<number>(10);
+  const [duration, setDuration] = useState<number>(10);
 
-  useInterval(duration);
+  const time = useInterval(duration);
 
-  // function handleElapsedTime() {
-  //   setElapsedTime((prevSeconds) => prevSeconds + 1); //callback function , 所以它是从内向外的运算,运算使用的是内部return的值,所以不会受state的初始值影响
-  // }
+  useEffect(() => {
+    setElapsedTime(time);
+  });
 
   function handleChangeDuration(event: React.ChangeEvent<HTMLInputElement>) {
     setDuration(Number(event.target.value) / 10);
@@ -63,29 +63,58 @@ function calculatePercentage(Numerator: number, Denominator: number): string {
   return "0";
 }
 
-function useInterval(
-  //handleTime: () => void,
-  duration: number
-) {
-  const [timer, setTimer] = useState(0);
-  const countRef = useRef<number>(0); //is 0 a good idee??? or undefined
-  countRef.current = duration - timer;
+// function useInterval(duration: number) {
+//   const [time, setTimer] = useState(0);
+//   const countRef = useRef<number>(0); //is 0 a good idee??? or undefined
+//   countRef.current = duration - time;
+
+//   useEffect(() => {
+//     performance.mark("timer interval");
+//     const intervalId = setInterval(() => {
+//       if (countRef.current > 0) {
+//         setTimer((i) => i + 1);
+//         countRef.current = countRef.current - 1;
+//         return;
+//       }
+//       const end = performance.measure("timer interval");
+//       console.log(end);
+//       clearInterval(intervalId);
+//     }, 1000);
+//     return () => {
+//       clearInterval(intervalId);
+//     };
+//   }, [duration]);
+//   return time;
+// }
+
+function useInterval(duration: number) {
+  const [time, setTimer] = useState(0);
+  const callBackRef = useRef<() => void | undefined>(); //is 0 a good idee??? or undefined
+  const idRef = useRef<number | undefined>();
+  function callback() {
+    setTimer(time + 1);
+  }
+
   useEffect(() => {
+    callBackRef.current = callback;
+  });
+
+  useEffect(() => {
+    //time is not updated in useEffect
     performance.mark("timer interval");
     const intervalId = setInterval(() => {
-      if (countRef.current <= 0) {
-        const end = performance.measure("timer interval");
-        console.log(end);
-        clearInterval(intervalId);
-        return;
-      }
-      setTimer((i) => i + 1);
-      countRef.current = countRef.current - 1;
+      callBackRef.current?.();
     }, 1000);
+    idRef.current = intervalId;
     return () => {
       clearInterval(intervalId);
     };
-    //clean up function , clean the first interval. 为什么是一个箭头函数?
   }, [duration]);
-  return timer;
+
+  if (time >= duration && idRef.current) {
+    const end = performance.measure("timer interval");
+    console.log(end);
+    clearInterval(idRef.current);
+  }
+  return time;
 }
