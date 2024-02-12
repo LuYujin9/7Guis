@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 
 type TemperatureData = {
-  celsius: number | "";
-  fahrenheit: number | "";
-  kelvin: number | "";
+  celsius: string | "";
+  fahrenheit: string | "";
+  kelvin: string | "";
 };
-//update the type
+//the data construction not so good
+//need a lot of checking
+//change the date type two times
+//too complex!!! is there a better way????!!!!
 
 export function TemperatureConverter({ id }: { id: string }) {
   const [values, setByFahrenheit, setByCelsius, setBykelvin] = useSyncedState();
-  const [inputCelsius, setInputCelsius] = useState<number | "">(""); //undefined , “” or null . 哪个好?
-  const [inputFahrenheit, setInputFahrenheit] = useState<number | "">(""); //undefined , “” or null . 哪个好?
-  const [inputKelvin, setInputKelvin] = useState<number | "">(""); //undefined , “” or null . 哪个好?
+  const [inputCelsius, setInputCelsius] = useState<string>("");
+  const [inputFahrenheit, setInputFahrenheit] = useState<string>("");
+  const [inputKelvin, setInputKelvin] = useState<string>("");
+  const [inputTest, setInputTest] = useState<string>("");
   //add a useState
 
   useEffect(() => {
@@ -26,25 +30,29 @@ export function TemperatureConverter({ id }: { id: string }) {
     setBykelvin(inputKelvin);
   }, [inputKelvin]);
 
-  //add a useEffect
-
   function handelCelsiusInputChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-    setInputCelsius(event.target.value ? Number(event.target.value) : "");
+    const inputValue = event.target.value;
+    if (isValidFormat(inputValue)) {
+      setInputCelsius(inputValue);
+    }
   }
 
   function handelFahrenheitInputChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-    setInputFahrenheit(event.target.value ? Number(event.target.value) : "");
+    isValidFormat(event.target.value) && setInputFahrenheit(event.target.value);
   }
 
   function handelKelvinInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setInputKelvin(event.target.value ? Number(event.target.value) : "");
+    isValidKelvinFormat(event.target.value) &&
+      setInputKelvin(event.target.value);
   }
 
-  //add a handelChangefunction
+  function handelTestInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    isValidFormat(event.target.value) && setInputTest(event.target.value);
+  }
 
   return (
     <div
@@ -54,7 +62,8 @@ export function TemperatureConverter({ id }: { id: string }) {
       <label className="flex-auto">
         <input
           className=" m-2 w-20 rounded border border-black"
-          type="number"
+          type="digit"
+          step={0.01}
           value={values.celsius === "" ? "" : values.celsius}
           onChange={handelCelsiusInputChange}
         />
@@ -64,7 +73,8 @@ export function TemperatureConverter({ id }: { id: string }) {
       <label className="flex-auto">
         <input
           className="m-2 w-20 rounded border border-black"
-          type="number"
+          type="digit"
+          step={0.01}
           value={values.fahrenheit === "" ? "" : values.fahrenheit}
           onChange={handelFahrenheitInputChange}
         />
@@ -74,13 +84,22 @@ export function TemperatureConverter({ id }: { id: string }) {
       <label className="flex-auto">
         <input
           className="m-2 w-20 rounded border border-black"
-          type="number"
-          value={values.kelvin === "" ? "" : values.kelvin}
+          type="digit"
           step={0.01}
-          //value={inputKelvin === "" ? "" : inputKelvin}
+          value={values.kelvin === "" ? "" : values.kelvin}
           onChange={handelKelvinInputChange}
         />
         Kelvin
+      </label>
+      <label className="flex-auto">
+        <input
+          className="m-2 w-20 rounded border border-black"
+          type="digit"
+          step={0.01}
+          value={inputTest}
+          onChange={handelTestInputChange}
+        />
+        Test
       </label>
     </div>
   );
@@ -88,9 +107,9 @@ export function TemperatureConverter({ id }: { id: string }) {
 
 const useSyncedState = (): [
   TemperatureData,
-  (newValue: "" | number) => void,
-  (newValue: "" | number) => void,
-  (newValue: "" | number) => void
+  (newValue: string) => void,
+  (newValue: string) => void,
+  (newValue: string) => void
   //add a function
 ] => {
   const [values, setValues] = useState<TemperatureData>({
@@ -100,16 +119,15 @@ const useSyncedState = (): [
   });
   //add
 
-  const setByFahrenheit = (newValue: "" | number) => {
-    const data = fahrenheitToOthers(newValue);
-    setValues({
-      celsius: data.celsius,
-      fahrenheit: data.fahrenheit,
-      kelvin: data.kelvin,
-    });
-  };
-
-  const setByCelsius = (newValue: "" | number) => {
+  const setByCelsius = (newValue: string) => {
+    if (newValue.endsWith(".")) {
+      setValues({
+        celsius: newValue,
+        fahrenheit: values.fahrenheit,
+        kelvin: values.kelvin,
+      });
+      return;
+    }
     const data = celsiusToOthers(newValue);
     setValues({
       celsius: data.celsius,
@@ -118,7 +136,32 @@ const useSyncedState = (): [
     });
   };
 
-  const setBykelvin = (newValue: "" | number) => {
+  const setByFahrenheit = (newValue: string) => {
+    if (newValue.endsWith(".")) {
+      setValues({
+        celsius: values.celsius,
+        fahrenheit: newValue,
+        kelvin: values.kelvin,
+      });
+      return;
+    }
+    const data = fahrenheitToOthers(newValue);
+    setValues({
+      celsius: data.celsius,
+      fahrenheit: data.fahrenheit,
+      kelvin: data.kelvin,
+    });
+  };
+
+  const setBykelvin = (newValue: string) => {
+    if (newValue.endsWith(".")) {
+      setValues({
+        celsius: values.celsius,
+        fahrenheit: values.fahrenheit,
+        kelvin: newValue,
+      });
+      return;
+    }
     const data = kelvinToOthers(newValue);
     setValues({
       celsius: data.celsius,
@@ -126,44 +169,62 @@ const useSyncedState = (): [
       kelvin: data.kelvin,
     });
   };
-  //add a function
   return [values, setByFahrenheit, setByCelsius, setBykelvin]; //add a export
 };
 
-function celsiusToOthers(celsius: "" | number): TemperatureData {
+function celsiusToOthers(celsius: string): TemperatureData {
   if (celsius === "") {
     return { celsius: "", fahrenheit: "", kelvin: "" };
   }
-  const fahrenheit = Math.floor((celsius * (9 / 5) + 32) * 100) / 100;
-  const kelvin = Math.floor((celsius - 273.15) * 100) / 100;
-  //add
-  return { celsius: celsius, fahrenheit: fahrenheit, kelvin: kelvin }; //add
+  const celsiusNumber = Number(celsius);
+  const fahrenheitNumber =
+    Math.floor((celsiusNumber * (9 / 5) + 32) * 100) / 100;
+  const kelvinNumber = Math.floor((celsiusNumber - 273.15) * 100) / 100;
+  return {
+    celsius: celsius,
+    fahrenheit: fahrenheitNumber.toString(),
+    kelvin: kelvinNumber.toString(),
+  };
 }
 
-function fahrenheitToOthers(fahrenheit: "" | number): TemperatureData {
+function fahrenheitToOthers(fahrenheit: string): TemperatureData {
   if (fahrenheit === "") {
     return { celsius: "", fahrenheit: "", kelvin: "" };
   }
-  const celsius = Math.floor((fahrenheit - 32) * (5 / 9) * 100) / 100;
-  const kelvin = Math.floor((celsius - 273.15) * 100) / 100;
-  //add
-  return { celsius: celsius, fahrenheit: fahrenheit, kelvin: kelvin }; //add
+  const fahrenheitNumber = Number(fahrenheit);
+  const celsiusNumber =
+    Math.floor((fahrenheitNumber - 32) * (5 / 9) * 100) / 100;
+  const kelvinNumber = Math.floor((fahrenheitNumber - 273.15) * 100) / 100;
+  return {
+    celsius: celsiusNumber.toString(),
+    fahrenheit: fahrenheit,
+    kelvin: kelvinNumber.toString(),
+  };
 }
 
-function kelvinToOthers(kelvin: "" | number): TemperatureData {
+function kelvinToOthers(kelvin: string): TemperatureData {
   if (kelvin === "") {
     return { celsius: "", fahrenheit: "", kelvin: "" };
   }
-  const celsius = 5;
-  Math.floor((kelvin + 273.1) * 100) / 100;
-  const fahrenheit = Math.floor((celsius * (9 / 5) + 32) * 100) / 100;
-  //add
-  return { celsius: celsius, fahrenheit: fahrenheit, kelvin: kelvin }; //add
+  const kelvinNumber = Number(kelvin);
+  const celsiusNumber = Math.floor((kelvinNumber + 273.1) * 100) / 100;
+  const fahrenheitNumber =
+    Math.floor((celsiusNumber * (9 / 5) + 32) * 100) / 100;
+  return {
+    celsius: celsiusNumber.toString(),
+    fahrenheit: fahrenheitNumber.toString(),
+    kelvin: kelvin,
+  };
 }
 
 //add a new function xxxToOthers
 
-// function checkInputFormat(input: string): boolean {
-//   const regex = /^\d*\.?\d*$/;
-//   return regex.test(input);
-// }
+function isValidFormat(input: string): boolean {
+  const regex = /^[-]?\d*(\.?\d{0,2})?$/;
+  return regex.test(input);
+}
+
+function isValidKelvinFormat(input: string): boolean {
+  const regex = /^\d*(\.?\d{0,2})?$/;
+  return regex.test(input);
+}
