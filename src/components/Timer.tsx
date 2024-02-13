@@ -22,7 +22,7 @@ export function Timer() {
   }
 
   return (
-    <div className="m-auto w-[25rem] p-5 bg-red-100  bg-white  md:bg-green-100 lg:bg-red-100">
+    <div className="m-auto w-[25rem] p-5  bg-white  lg:bg-red-100">
       <div className="flex w-full m-auto">
         <p className="flex-aut m-auto">Elapsed Time:{elapsedTime}s</p>
         <div className="flex-auto overflow-hidden border border-gray-500 w-1/2 h-6 rounded m-3 bg-red-100">
