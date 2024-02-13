@@ -6,6 +6,7 @@ import { TemperatureConverterPage } from "./pages/temperatureConverterPage.tsx";
 import { CrudPage } from "./pages/crudPage.tsx";
 import { TimerPage } from "./pages/TimerPage.tsx";
 import { FlightBookerPage } from "./pages/flightBookerPage.tsx";
+import { Test } from "./pages/test.tsx";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       <Route path="timerPage" element={<TimerPage />} />
       <Route path="flightBookerPage" element={<FlightBookerPage />} />
       <Route path="crudPage" element={<CrudPage />} />
+      <Route path="test" element={<Test />} />
     </Routes>
   );
 }
