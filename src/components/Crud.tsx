@@ -139,7 +139,7 @@ export function Crud() {
   }
 
   return (
-    <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5 md:w-auto md:bg-green-100 lg:w-4/5 lg:w-auto lg:bg-red-100">
+    <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5  md:bg-green-100 lg:w-4/5  lg:bg-red-100">
       <label>
         Filter prefix:
         <input
