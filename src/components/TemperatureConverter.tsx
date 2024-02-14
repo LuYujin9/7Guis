@@ -1,19 +1,52 @@
 import { ChangeEvent, useState } from "react";
 
-//undefined , “” or null . which is better?
-type TemperatureData = {
-  [key: string]: any; // an other way????
-  celsius: number | "";
-  fahrenheit: number | "";
-  kelvin: number | "";
-  test: number | "";
+type Unit = {
+  name: string;
+  toCelsius: (arg0: number) => number;
+  fromCelsius: (arg0: number) => number;
 };
-//update the type
+//type Units=[Unit,...Unit[]]
+type Units = Unit[] & { 0: Unit };
+
+const units = [
+  {
+    name: "celsius",
+    toCelsius: (celsius) => {
+      return celsius;
+    },
+    fromCelsius: (celsius) => {
+      return celsius;
+    },
+  },
+  {
+    name: "fahrenheit",
+    toCelsius: (fahrenheit) => {
+      return Math.floor((fahrenheit - 32) * (5 / 9) * 100) / 100;
+    },
+    fromCelsius: (celsius) => {
+      return Math.floor((celsius * (9 / 5) + 32) * 100) / 100;
+    },
+  },
+  {
+    name: "kelvin",
+    toCelsius: (kelvin) => {
+      return Math.floor((kelvin - 273.15) * 100) / 100;
+    },
+    fromCelsius: (celsius) => {
+      return Math.floor((celsius + 273.15) * 100) / 100;
+    },
+  },
+] satisfies Units; //single source of truth
+
+/* 可能有多项的object, 定义全部的type */
+type TemperatureData = {
+  [key: string]: number | "";
+};
 
 export function TemperatureConverter({ id }: { id: string }) {
   const [values, setUpdatedValues] = useSyncedState();
 
-  const unitNames = ["celsius", "fahrenheit", "kelvin", "test"]; //update here
+  const unitNames = units.map((unit) => unit.name);
 
   function handelInputChange(
     name: string,
@@ -25,7 +58,7 @@ export function TemperatureConverter({ id }: { id: string }) {
     );
   }
 
-  const message = isValueInvalid("celsius", values ? values.celsius : "")
+  const message = isValueInvalid(values ? values.celsius : "")
     ? "The value is invalid"
     : "";
 
@@ -39,6 +72,7 @@ export function TemperatureConverter({ id }: { id: string }) {
           key={index}
           name={name}
           value={values ? values[name] : ""}
+          isValueInvalid={isValueInvalid(values.celsius)}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             handelInputChange(name, event)
           }
@@ -50,124 +84,53 @@ export function TemperatureConverter({ id }: { id: string }) {
 }
 
 const useSyncedState = (): [
-  TemperatureData | undefined,
+  TemperatureData,
   (name: string, newValue: "" | number) => void
 ] => {
-  const [values, setValues] = useState<TemperatureData | undefined>();
+  const [values, setValues] = useState<TemperatureData>({});
   function calculate(name: string, input: "" | number) {
-    switch (name) {
-      case "celsius":
-        return celsiusToOthers(input);
-      case "fahrenheit":
-        return fahrenheitToOthers(input);
-      case "kelvin":
-        return kelvinToOthers(input);
-      //add new calculate function for unit hier
-      default:
-        throw new Error(`Unexpected name: ${name}`);
+    const toCelsius = units.find((unit) => unit.name === name)!.toCelsius;
+    if (input === "") {
+      const entries = units.map((unit) => {
+        return [unit.name, ""];
+      });
+      return Object.fromEntries(entries);
     }
+    const celsius = toCelsius(input);
+    const entries = units.map((unit) => {
+      return [unit.name, unit.fromCelsius(celsius)];
+    });
+    return Object.fromEntries(entries);
   }
   function setUpdatedValues(name: string, newValue: "" | number) {
-    const data = calculate(name, newValue);
-    setValues({
-      celsius: data.celsius,
-      fahrenheit: data.fahrenheit,
-      kelvin: data.kelvin,
-      test: data.test,
-    });
+    setValues(calculate(name, newValue));
   }
   return [values, setUpdatedValues];
 };
 
-function celsiusToOthers(celsius: "" | number): TemperatureData {
-  if (celsius === "") {
-    return { celsius: "", fahrenheit: "", kelvin: "", test: "" };
-  }
-  const fahrenheit = Math.floor((celsius * (9 / 5) + 32) * 100) / 100;
-  const kelvin = Math.floor((celsius + 273.15) * 100) / 100;
-  const test = celsius + 1;
-  //add
-  return {
-    celsius: celsius,
-    fahrenheit: fahrenheit,
-    kelvin: kelvin,
-    test: test,
-  }; //add
-}
-
-function fahrenheitToOthers(fahrenheit: "" | number): TemperatureData {
-  if (fahrenheit === "") {
-    return { celsius: "", fahrenheit: "", kelvin: "", test: "" };
-  }
-  const celsius = Math.floor((fahrenheit - 32) * (5 / 9) * 100) / 100;
-  const kelvin = Math.floor((celsius + 273.15) * 100) / 100;
-  const test = celsius + 1;
-  //add
-  return {
-    celsius: celsius,
-    fahrenheit: fahrenheit,
-    kelvin: kelvin,
-    test: test,
-  }; //add
-}
-
-function kelvinToOthers(kelvin: "" | number): TemperatureData {
-  if (kelvin === "") {
-    return { celsius: "", fahrenheit: "", kelvin: "", test: "" };
-  }
-  const celsius = Math.floor((kelvin - 273.15) * 100) / 100;
-  const fahrenheit = Math.floor((celsius * (9 / 5) + 32) * 100) / 100;
-  const test = celsius + 1;
-  //add
-  return {
-    celsius: celsius,
-    fahrenheit: fahrenheit,
-    kelvin: kelvin,
-    test: test,
-  }; //add
-}
-
-//add a new function xxxToOthers
-
-/* How about check only one of value, when the values are related???? */
-function isValueInvalid(name: string, value: number | "") {
-  // function asserNever(value: never): never {
-  //   throw new Error(`value should not exist ${value}`);
-  // }
-  if (value === undefined || value === "") {
+function isValueInvalid(value: number | "") {
+  if (value === "") {
     return false;
   }
-  switch (name) {
-    case "celsius":
-      return value < -273.15 ? true : false;
-    case "fahrenheit":
-      return value < -459.67 ? true : false;
-    case "kelvin":
-      return value < 0 ? true : false;
-    case "test":
-      return value < -272.15 ? true : false;
-    //add
-    default:
-      throw new Error(`Unexpected name: ${name}`);
-    /* also works? difference? */
-    //asserNever(name); //why???
-  }
+  return value < -273.15 ? true : false;
 }
 
 function TemperatureInput({
   name,
   value,
   onChange,
+  isValueInvalid,
 }: {
   name: string;
-  value: number | undefined;
+  value: number | "";
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  isValueInvalid: boolean;
 }) {
   return (
     <label className="flex-auto">
       <input
         className={` m-2 w-20 rounded border  border-black ${
-          isValueInvalid(name, value ? value : "") ? "bg-red-500" : ""
+          isValueInvalid ? "bg-red-500" : ""
         }`}
         type="number"
         value={value || value === 0 ? value : ""}
