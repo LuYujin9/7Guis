@@ -38,27 +38,13 @@ const units = [
   },
 ] satisfies Units; //single source of truth
 
-/* 可能有多项的object, 定义全部的type */
-type TemperatureData = {
-  [key: string]: number | "";
-};
+type Temperature = number | "";
 
 export function TemperatureConverter({ id }: { id: string }) {
-  const [values, setUpdatedValues] = useSyncedState();
+  const [celsius, setCelsius] = useSyncedState();
 
   const unitNames = units.map((unit) => unit.name);
-
-  function handelInputChange(
-    name: string,
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    setUpdatedValues(
-      name,
-      event.target.value ? Number(event.target.value) : ""
-    );
-  }
-
-  const message = isValueInvalid(values ? values.celsius : "")
+  const message = isValueInvalid(celsius ? celsius : "")
     ? "The value is invalid"
     : "";
 
@@ -71,10 +57,14 @@ export function TemperatureConverter({ id }: { id: string }) {
         <TemperatureInput
           key={index}
           name={name}
-          value={values ? values[name] : ""}
-          isValueInvalid={isValueInvalid(values.celsius)}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            handelInputChange(name, event)
+          value={
+            celsius === ""
+              ? ""
+              : units.find((unit) => unit.name === name)!.fromCelsius(celsius)
+          }
+          isValueInvalid={isValueInvalid(celsius ? celsius : "")}
+          onChange={(e) =>
+            setCelsius(name, e.target.value ? Number(e.target.value) : "")
           }
         />
       ))}
@@ -84,28 +74,19 @@ export function TemperatureConverter({ id }: { id: string }) {
 }
 
 const useSyncedState = (): [
-  TemperatureData,
-  (name: string, newValue: "" | number) => void
+  Temperature,
+  (name: string, input: "" | number) => void
 ] => {
-  const [values, setValues] = useState<TemperatureData>({});
-  function calculate(name: string, input: "" | number) {
-    const toCelsius = units.find((unit) => unit.name === name)!.toCelsius;
+  const [celsius, setCelsius] = useState<Temperature>("");
+  function setUpdatedCelsius(name: string, input: "" | number) {
     if (input === "") {
-      const entries = units.map((unit) => {
-        return [unit.name, ""];
-      });
-      return Object.fromEntries(entries);
+      setCelsius("");
+      return;
     }
-    const celsius = toCelsius(input);
-    const entries = units.map((unit) => {
-      return [unit.name, unit.fromCelsius(celsius)];
-    });
-    return Object.fromEntries(entries);
+    const celsius = units.find((unit) => unit.name === name)!.toCelsius(input);
+    setCelsius(celsius);
   }
-  function setUpdatedValues(name: string, newValue: "" | number) {
-    setValues(calculate(name, newValue));
-  }
-  return [values, setUpdatedValues];
+  return [celsius, setUpdatedCelsius];
 };
 
 function isValueInvalid(value: number | "") {
@@ -140,3 +121,28 @@ function TemperatureInput({
     </label>
   );
 }
+
+// const useSyncedState = (): [
+//   TemperatureData,
+//   (name: string, newValue: "" | number) => void
+// ] => {
+//   const [values, setValues] = useState<TemperatureData>({});
+//   function calculate(name: string, input: "" | number) {
+//     const toCelsius = units.find((unit) => unit.name === name)!.toCelsius;
+//     if (input === "") {
+//       const entries = units.map((unit) => {
+//         return [unit.name, ""];
+//       });
+//       return Object.fromEntries(entries);
+//     }
+//     const celsius = toCelsius(input);
+//     const entries = units.map((unit) => {
+//       return [unit.name, unit.fromCelsius(celsius)];
+//     });
+//     return Object.fromEntries(entries);
+//   }
+//   function setUpdatedValues(name: string, newValue: "" | number) {
+//     setValues(calculate(name, newValue));
+//   }
+//   return [values, setUpdatedValues];
+// };
