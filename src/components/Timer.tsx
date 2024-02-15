@@ -1,19 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 export function Timer() {
   const [inputValue, setInputValue] = useState<number>(0);
   /*  当data直接有相关性的时候,只需一个useState*/
   const duration = inputValue / 10;
   const [time, resetTime] = useInterval(duration);
-
-  function handleChangeDuration(event: React.ChangeEvent<HTMLInputElement>) {
-    setInputValue(Number(event.target.value));
-  }
-
-  function handleReset() {
-    resetTime();
-    setInputValue(0);
-  }
 
   return (
     <div className="m-auto w-[25rem] p-5  bg-white  lg:bg-red-100">
@@ -36,12 +27,12 @@ export function Timer() {
           min={0}
           max={600}
           value={inputValue}
-          onChange={handleChangeDuration}
+          onChange={(e) => setInputValue(Number(e.target.value))}
         />
       </label>
       <button
         className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-        onClick={handleReset}
+        onClick={resetTime}
       >
         Reset
       </button>
@@ -58,37 +49,26 @@ function calculatePercentage(Numerator: number, Denominator: number): string {
 
 function useInterval(duration: number) {
   const [time, setTimer] = useState(0);
-  const idRef = useRef<number | undefined>();
-  /* this is the way to use with different callback function, to fit different situation */
-
-  //const callBackRef = useRef<() => void | undefined>();
-
-  // function callback() {
-  //   setTimer(time + 1);
-  // }
-
-  // useEffect(() => {
-  //   callBackRef.current = callback;
-  // });
-
-  if (time >= duration && idRef.current) {
-    console.log("cleared", idRef.current);
-    clearInterval(idRef.current);
-  }
 
   useEffect(() => {
     if (time < duration) {
       const intervalId = setInterval(() => {
-        setTimer((t) => t + 1);
+        setTimer((t) => {
+          const newTime = t + 1;
+          if (newTime >= duration) {
+            clearInterval(intervalId);
+          }
+          return newTime;
+        });
         // callBackRef.current?.();
       }, 1000);
       console.log("started", intervalId);
-      idRef.current = intervalId;
+      // idRef.current = intervalId;
       return () => {
         console.log("cleared", intervalId);
         clearInterval(intervalId);
       };
-      /*   return 的function会在第二次运行的时候, 被运行.  setTimer((t) => t + 1);也是一样的情况. !!再看一次event loop  */
+      /*   return 的function会在第二次运行的时候, 被运行.  setTimer((t) => t + 1);也是一样的情况. */
     }
   }, [duration]);
 
@@ -98,5 +78,24 @@ function useInterval(duration: number) {
       setTimer(0);
     },
   ] as const;
-  /* 也可以type function的return */
+  /* 也可以 function作为 return */
 }
+
+/* 如果想要泛用callback function, 可以用这样的方式 */
+// const idRef = useRef<number | undefined>();
+/* this is the way to use with different callback function, to fit different situation */
+
+//const callBackRef = useRef<() => void | undefined>();
+
+// function callback() {
+//   setTimer(time + 1);
+// }
+
+// useEffect(() => {
+//   callBackRef.current = callback;
+// });
+
+// if (time >= duration && idRef.current) {
+//   console.log("cleared", idRef.current);
+//   clearInterval(idRef.current);
+// }
