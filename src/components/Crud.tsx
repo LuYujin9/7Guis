@@ -2,69 +2,59 @@ import { useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { CurdInput } from "./CurdInput";
 
-type FullName = {
-  frontName: string;
+type UserName = {
+  name: string;
   surname: string;
   id: string;
 };
 
-type InputsValues = {
-  filter: string;
-  name: string;
-  surname: string;
-};
-
-const initialNameList: FullName[] = [
-  { frontName: "Jane", surname: "Davis", id: "0" },
-  { frontName: "John", surname: "Wilson", id: "1" },
-  { frontName: "Tisch", surname: "Roman", id: "2" },
-  { frontName: "Isabella", surname: "White", id: "3" },
-  { frontName: "Jane", surname: "Davis", id: "4" },
-  { frontName: "John", surname: "Wilson", id: "5" },
-  { frontName: "Tisch", surname: "Roman", id: "6" },
-  { frontName: "Isabella", surname: "White", id: "7" },
-  { frontName: "Jane", surname: "Davis", id: "8" },
-  { frontName: "John", surname: "Wilson", id: "9" },
-  { frontName: "Tisch", surname: "Roman", id: "10" },
-  { frontName: "Isabella", surname: "White", id: "11" },
+const initialNameList: UserName[] = [
+  { name: "Jane", surname: "Davis", id: "0" },
+  { name: "John", surname: "Wilson", id: "1" },
+  { name: "Tisch", surname: "Roman", id: "2" },
+  { name: "Isabella", surname: "White", id: "3" },
+  { name: "Jane", surname: "Davis", id: "4" },
+  { name: "John", surname: "Wilson", id: "5" },
+  { name: "Tisch", surname: "Roman", id: "6" },
+  { name: "Isabella", surname: "White", id: "7" },
+  { name: "Jane", surname: "Davis", id: "8" },
+  { name: "John", surname: "Wilson", id: "9" },
+  { name: "Tisch", surname: "Roman", id: "10" },
+  { name: "Isabella", surname: "White", id: "11" },
 ];
 
 export function Crud() {
-  const [nameList, setNameList] = useState<FullName[]>(initialNameList);
+  const [nameList, setNameList] = useState<UserName[]>(initialNameList);
+  const [filterValue, setFilterValue] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [userName, setUserName] = useState<UserName>({
+    name: "",
+    surname: "",
+    id: "",
+  });
   const [message, setMessage] = useState<string>("");
-  const [
-    inputValues,
-    setInputValuesById,
-    setInputValuesByChange,
-    setInputValuesFromDirectAssignment,
-  ] = useInputValues();
 
-  const filteredNameList = setfilteredNameList(inputValues.filter, nameList);
+  const filteredNameList = filterNameList(filterValue, nameList);
 
-  const nameListHashMap = useMemo(
-    () => generateNameListHashMap(nameList),
-    [nameList]
-  );
+  /* 如何用上hashMap */
+  // const nameListHashMap = useMemo(
+  //   () => generateNameListHashMap(nameList),
+  //   [nameList]
+  // );
 
-  function handleCreat() {
-    if (inputValues.name === "" && inputValues.surname === "") {
+  function handleCreate() {
+    if (userName.name === "" && userName.surname === "") {
       setMessage("Please give a name");
       return;
     }
     const id = uuidv4();
     const newName = {
-      frontName: inputValues.name,
-      surname: inputValues.surname,
+      name: userName.name,
+      surname: userName.surname,
       id: id,
     };
     setNameList([...nameList, newName]);
-    setSelectedId(id);
-    setInputValuesFromDirectAssignment(
-      "",
-      inputValues.name,
-      inputValues.surname
-    );
+    setUserNameById(id); //use it several times, but shouldn't use useEffect with setting state! a better way?
     setMessage("The name is created");
   }
 
@@ -73,77 +63,81 @@ export function Crud() {
       setMessage("Please choose a name");
       return;
     }
-    if (inputValues.name === "" && inputValues.surname === "") {
+    if (userName.name === "" && userName.surname === "") {
       setMessage("Please give a name");
       return;
     }
-    if (selectedId && inputValues.name && inputValues.surname) {
-      const updatedName = {
-        frontName: inputValues.name,
-        surname: inputValues.surname,
+    if (selectedId && userName.name && userName.surname) {
+      const updatedUserName = {
+        name: userName.name,
+        surname: userName.surname,
         id: selectedId,
       };
       const updatedNameList = nameList.map((name) => {
-        return name.id === selectedId ? updatedName : name;
+        return name.id === selectedId ? updatedUserName : name;
       });
       setNameList(updatedNameList);
-      setInputValuesFromDirectAssignment(
-        "",
-        inputValues.name,
-        inputValues.surname
-      );
       setMessage("The name is updated");
     }
   }
 
   function handleDelete(selectedId: string | undefined) {
     if (!selectedId) {
-      setMessage("No name selected");
+      setMessage("Please select a name");
       return;
     }
     const updatedNameList = nameList.filter((name) => name.id !== selectedId);
     setNameList(updatedNameList);
+    setUserName({
+      name: "",
+      surname: "",
+      id: "",
+    });
     setSelectedId(undefined);
-    setInputValuesFromDirectAssignment("", "", "");
     setMessage("The name is deleted");
   }
 
-  function handleSelectName(event: React.ChangeEvent<HTMLSelectElement>) {
-    const selectedId = event.target.value;
-    setSelectedId(selectedId);
-    setInputValuesById(selectedId, nameListHashMap);
+  function handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
+    setFilterValue(event.target.value);
+    setSelectedId(undefined);
   }
 
-  //there is still a bug
-  function handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    const name = event.target.name;
-    setInputValuesByChange(name, value);
-    setInputValuesFromDirectAssignment(value, "", "");
-    setSelectedId(undefined);
-    /*find a better way? */
-    // const newNameList = setfilteredNameList(value, nameList);
-    // const isSelectedNameInFilteredNameList = newNameList.find(
-    //   (fullName) => fullName.id === selectedId
-    // );
-    // if (!isSelectedNameInFilteredNameList) {
-    //   setInputValuesFromDirectAssignment(value, "", "");
-    //   setSelectedId(undefined);
-    // }
+  function handleSelectName(event: React.ChangeEvent<HTMLSelectElement>) {
+    const id = event.target.value;
+    setSelectedId(id);
+    setUserNameById(id);
   }
 
   function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
-    const name = event.target.name;
-    setInputValuesByChange(name, value);
+    const newUserName = {
+      name: value,
+      surname: userName.surname,
+      id: userName.id,
+    };
+    setUserName(newUserName);
   }
 
   function handleChangeSurnameInput(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
     const value = event.target.value;
-    const name = event.target.name;
-    setInputValuesByChange(name, value);
+    const newUserName = {
+      name: userName.name,
+      surname: value,
+      id: userName.id,
+    };
+    setUserName(newUserName);
+  }
+
+  function setUserNameById(id: string) {
+    const matchedName = filteredNameList!.find((name) => name.id === id); //assume , there is always at least a user name.
+    const newUserName = {
+      name: matchedName ? matchedName.name : "",
+      surname: matchedName ? matchedName.surname : "",
+      id: matchedName ? matchedName.id : "",
+    };
+    setUserName(newUserName);
   }
 
   return (
@@ -151,7 +145,7 @@ export function Crud() {
       <CurdInput
         children="Filter prefix:"
         name="filter"
-        value={inputValues.filter}
+        value={filterValue}
         onChange={(event) => {
           handleChangeFilter(event);
         }}
@@ -160,10 +154,10 @@ export function Crud() {
         className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
         size={10}
         onChange={handleSelectName}
-        value={selectedId ?? undefined}
+        //value={userNameInput.selectedId ?? undefined}
       >
-        {filteredNameList.map((fullName) => {
-          return <NameBox key={fullName.id} fullName={fullName} />;
+        {filteredNameList.map((UserName) => {
+          return <NameBox key={UserName.id} UserName={UserName} />;
         })}
       </select>
 
@@ -171,19 +165,19 @@ export function Crud() {
         <CurdInput
           children="Name:"
           name="name"
-          value={inputValues.name}
+          value={userName.name}
           onChange={handleChangeNameInput}
         />
         <CurdInput
           children="Surname:"
           name="surname"
-          value={inputValues.surname}
+          value={userName.surname}
           onChange={handleChangeSurnameInput}
         />
       </div>
 
       <div>
-        <Button label="Creat" onClick={() => handleCreat()} />
+        <Button label="Create" onClick={() => handleCreate()} />
         <Button label="Update" onClick={() => handleUpdate(selectedId)} />
         <Button label="Delete" onClick={() => handleDelete(selectedId)} />
       </div>
@@ -193,102 +187,17 @@ export function Crud() {
   );
 }
 
-function setfilteredNameList(input: string, list: FullName[]) {
+function filterNameList(input: string, list: UserName[]) {
   const filterValue = input.toLowerCase();
   return list.filter((name) =>
     name.surname.toLowerCase().startsWith(filterValue)
   );
 }
 
-function generateNameListHashMap(nameList: FullName[]) {
-  const nameListHashMap = new Map();
-  nameList.forEach((fullname) => {
-    nameListHashMap.set(fullname.id, fullname);
-  });
-  return nameListHashMap;
-}
-
-function useInputValues() {
-  const [inputValues, setInputValues] = useState<InputsValues>({
-    filter: "",
-    name: "",
-    surname: "",
-  });
-
-  function setInputValuesById(
-    id: string | undefined,
-    nameListHashMap: Map<any, any>
-  ) {
-    const matchedName = nameListHashMap.get(id);
-    if (id === undefined || !matchedName) {
-      setInputValues({
-        filter: inputValues.filter,
-        name: "",
-        surname: "",
-      });
-      return;
-    }
-    setInputValues({
-      filter: inputValues.filter,
-      name: matchedName.frontName,
-      surname: matchedName.surname,
-    });
-  }
-
-  function setInputValuesByChange(name: string, value: string) {
-    switch (name) {
-      case "filter":
-        setInputValues({
-          filter: value,
-          name: inputValues.name,
-          surname: inputValues.surname,
-        });
-        return;
-      case "name":
-        setInputValues({
-          filter: inputValues.filter,
-          name: value,
-          surname: inputValues.surname,
-        });
-        return;
-      case "surname":
-        setInputValues({
-          filter: inputValues.filter,
-          name: inputValues.name,
-          surname: value,
-        });
-        return;
-      default:
-        assertNever(name);
-    }
-  }
-  function setInputValuesFromDirectAssignment(
-    filterValue: string,
-    nameValue: string,
-    surnameValue: string
-  ) {
-    setInputValues({
-      filter: filterValue,
-      name: nameValue,
-      surname: surnameValue,
-    });
-  }
-  return [
-    inputValues,
-    setInputValuesById,
-    setInputValuesByChange,
-    setInputValuesFromDirectAssignment,
-  ] as const;
-}
-
-function assertNever(value: never | string): never {
-  throw new Error(`value should not exist ${value}`);
-}
-
-function NameBox({ fullName }: { fullName: FullName }) {
+function NameBox({ UserName }: { UserName: UserName }) {
   return (
-    <option className="text-left pl-2" value={fullName.id}>
-      {fullName.frontName}, {fullName.surname}
+    <option className="text-left pl-2" value={UserName.id}>
+      {UserName.name}, {UserName.surname}
     </option>
   );
 }
@@ -303,3 +212,57 @@ function Button({ label, onClick }: { label: string; onClick: () => void }) {
     </button>
   );
 }
+
+// function generateNameListHashMap(nameList: UserName[]) {
+//   const nameListHashMap = new Map();
+//   nameList.forEach((UserName) => {
+//     nameListHashMap.set(UserName.id, UserName);
+//   });
+//   return nameListHashMap;
+// }
+
+// function useUserNameInput() {
+//   const [userNameInput, setUserNameInput] = useState<InputInfos>({
+//     name: "",
+//     surname: "",
+//     selectedId: undefined,
+//   });
+
+//   function setUserNameInputByChange(
+//     name: "name" | "surname" | "selectedId",
+//     value: string,
+//     nameList?: UserName[]
+//   ) {
+//     switch (name) {
+//       case "name":
+//         setUserNameInput({
+//           name: value,
+//           surname: userNameInput.surname,
+//           selectedId: userNameInput.selectedId,
+//         });
+//         return;
+//       case "surname":
+//         setUserNameInput({
+//           name: userNameInput.name,
+//           surname: value,
+//           selectedId: userNameInput.selectedId,
+//         });
+//         return;
+//       case "selectedId":
+//         const matchedName = nameList!.find((name) => name.id === value); //assume , there is always at least a user name.
+//         setUserNameInput({
+//           name: matchedName ? matchedName.name : "",
+//           surname: matchedName ? matchedName.surname : "",
+//           selectedId: value,
+//         });
+//         return;
+//       default:
+//         assertNever(name);
+//     }
+//   }
+//   return [userNameInput, setUserNameInputByChange] as const;
+// }
+
+// function assertNever(value: never | string): never {
+//   throw new Error(`value should not exist ${value}`);
+// }
