@@ -40,7 +40,7 @@ const units = [
 
 type Temperature = number | "";
 
-export function TemperatureConverter({ id }: { id: string }) {
+export function TemperatureConverterTwo({ id }: { id: string }) {
   const [celsius, setCelsius] = useSyncedState();
   const [focusedInputData, setFocusedInputData] = useState<{
     name: string;
@@ -62,20 +62,6 @@ export function TemperatureConverter({ id }: { id: string }) {
           .find((unit) => unit.name === name)!
           .fromCelsius(celsius)
           .toString();
-  } // is a function better?
-
-  function handelInputChange(
-    name: string,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const input = e.target.value;
-    setFocusedInputData({
-      name: e.target.name,
-      value: input,
-    });
-    if (!isNaN(Number(input)) && input !== "-") {
-      setCelsius(name, input ? Number(input) : "");
-    }
   }
 
   return (
@@ -87,19 +73,22 @@ export function TemperatureConverter({ id }: { id: string }) {
         <TemperatureInput
           key={index}
           name={name}
-          value={
-            focusedInputData?.name === name
-              ? focusedInputData.value
-              : celsius === ""
-              ? ""
-              : units
-                  .find((unit) => unit.name === name)!
-                  .fromCelsius(celsius)
-                  .toString() //not easy to understand the logic
-          }
+          value={calculateInputDisplayValue(name)}
           isValueInvalid={isValueInvalid(celsius ? celsius : "")}
           onChange={(e) => {
-            handelInputChange(name, e);
+            const input = e.target.value;
+            const inputAction = (e.nativeEvent as InputEvent).inputType; //underlying browser event from DOM API, use or better not? disadvantage?
+            setFocusedInputData({
+              name: e.target.name,
+              value: input,
+            });
+            if (input !== "") {
+              setCelsius(name, Number(input));
+              return;
+            }
+            if (shouldInputEmpty(inputAction, focusedInputData?.value)) {
+              setCelsius(name, "");
+            }
           }}
         />
       ))}
@@ -131,6 +120,16 @@ function isValueInvalid(value: number | "") {
   return value < -273.15 ? true : false;
 }
 
+function shouldInputEmpty(
+  inputAction: string,
+  prevInputValue: string | undefined
+) {
+  return (
+    (inputAction === "deleteContentBackward" && prevInputValue?.length === 1) ||
+    (prevInputValue?.charAt(0) === "-" && prevInputValue?.length === 2)
+  );
+} // I don't like it.
+
 function TemperatureInput({
   name,
   value,
@@ -138,7 +137,7 @@ function TemperatureInput({
   isValueInvalid,
 }: {
   name: string;
-  value: string;
+  value: string | "";
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   isValueInvalid: boolean;
 }) {
@@ -148,37 +147,12 @@ function TemperatureInput({
         className={` m-2 w-20 rounded border  border-black ${
           isValueInvalid ? "bg-red-500" : ""
         }`}
-        type="text"
-        name={name}
+        type="number" //number
         value={value}
+        name={name}
         onChange={onChange}
       />
       {name}
     </label>
   );
 }
-
-// const useSyncedState = (): [
-//   TemperatureData,
-//   (name: string, newValue: "" | number) => void
-// ] => {
-//   const [values, setValues] = useState<TemperatureData>({});
-//   function calculate(name: string, input: "" | number) {
-//     const toCelsius = units.find((unit) => unit.name === name)!.toCelsius;
-//     if (input === "") {
-//       const entries = units.map((unit) => {
-//         return [unit.name, ""];
-//       });
-//       return Object.fromEntries(entries);
-//     }
-//     const celsius = toCelsius(input);
-//     const entries = units.map((unit) => {
-//       return [unit.name, unit.fromCelsius(celsius)];
-//     });
-//     return Object.fromEntries(entries);
-//   }
-//   function setUpdatedValues(name: string, newValue: "" | number) {
-//     setValues(calculate(name, newValue));
-//   }
-//   return [values, setUpdatedValues];
-// };
