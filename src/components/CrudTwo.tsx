@@ -12,7 +12,7 @@ type User = {
 type UserInputs = Omit<User, "id">;
 type UserList<User> = [User, ...User[]];
 
-const initialUserList: UserList<User> = [
+const initialNameList: UserList<User> = [
   { name: "Jane", surname: "Davis", id: "0" },
   { name: "John", surname: "Wilson", id: "1" },
   { name: "Tisch", surname: "Roman", id: "2" },
@@ -26,14 +26,11 @@ const initialUserList: UserList<User> = [
   { name: "Tisch", surname: "Roman", id: "10" },
 ];
 
-export function Crud() {
-  const [userList, setUserList] = useState<UserList<User>>(initialUserList);
+export function CrudTwo() {
+  const [userList, setNameList] = useState<UserList<User>>(initialNameList);
   const [filterValue, setFilterValue] = useState<string>("");
-  const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [userInputs, setUserInputs] = useState<UserInputs>({
-    name: "",
-    surname: "",
-  });
+  const [selectedId, userInputs, setIdAndInputsById, setUserInputs] =
+    useIdAndInputsState();
   const [message, setMessage] = useState<string>("");
 
   const filteredUserList = filterUserList(filterValue, userList);
@@ -49,8 +46,8 @@ export function Crud() {
       surname: userInputs.surname,
       id: id,
     };
-    setUserList([...userList, newName]);
-    setSelectedId(id);
+    setNameList([...userList, newName]);
+    setIdAndInputsById(id, [...userList, newName]);
     resetState("filterValue");
     setMessage("The name is created");
   }
@@ -65,6 +62,7 @@ export function Crud() {
       return;
     }
     if (selectedId && (userInputs.name || userInputs.surname)) {
+      //mutable with Reference Values. Object and array
       const oldUserToUpdate = userList.find((user) => user.id === selectedId)!;
       oldUserToUpdate.name = userInputs.name;
       oldUserToUpdate.surname = userInputs.surname;
@@ -82,8 +80,7 @@ export function Crud() {
     if (indexToDelete !== -1)
       // should I keep this 'if', even I know that, there must be a indexToDelete.
       userList.splice(indexToDelete, 1);
-    resetState("selectedId");
-    resetState("userInputs");
+    resetState("selectedIdAndUserInputs");
     resetState("filterValue");
     setMessage("The name is deleted");
   }
@@ -95,43 +92,18 @@ export function Crud() {
       userList
     ).some((user) => user.id === selectedId);
     if (!isSelectedIdInFilteredUserList) {
-      resetState("selectedId");
-      resetState("userInputs");
+      console.log("reset");
+      resetState("selectedIdAndUserInputs");
     }
   }
 
-  function handleChangeUserInputs(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    const inputName = event.target.name;
-    switch (inputName) {
-      case "name":
-        setUserInputs({
-          name: value,
-          surname: userInputs?.surname ?? "",
-        });
-        return;
-      case "surname":
-        setUserInputs({
-          name: userInputs?.name ?? "",
-          surname: value,
-        });
-        return;
-    }
-  }
-
-  function resetState(stateName: "userInputs" | "filterValue" | "selectedId") {
+  function resetState(stateName: "filterValue" | "selectedIdAndUserInputs") {
     switch (stateName) {
-      case "userInputs":
-        setUserInputs({
-          name: "",
-          surname: "",
-        });
-        return;
       case "filterValue":
         setFilterValue("");
         return;
-      case "selectedId":
-        setSelectedId(undefined);
+      case "selectedIdAndUserInputs":
+        setIdAndInputsById(undefined, userList);
         return;
       default:
         assertNever(stateName);
@@ -150,10 +122,7 @@ export function Crud() {
         className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
         size={10}
         onChange={(e) => {
-          setSelectedId(e.target.value);
-          setUserInputs(
-            filteredUserList!.find((user) => user.id === e.target.value)!
-          );
+          setIdAndInputsById(e.target.value, filteredUserList);
         }}
         value={selectedId}
       >
@@ -166,13 +135,17 @@ export function Crud() {
           children="Name:"
           name="name"
           value={userInputs?.name ?? ""}
-          onChange={handleChangeUserInputs}
+          onChange={(e) => {
+            setUserInputs(e.target.name, e.target.value);
+          }}
         />
         <Input
           children="Surname:"
           name="surname"
           value={userInputs?.surname ?? ""}
-          onChange={handleChangeUserInputs}
+          onChange={(e) => {
+            setUserInputs(e.target.name, e.target.value);
+          }}
         />
       </div>
       <div>
@@ -180,7 +153,6 @@ export function Crud() {
         <Button label="Update" onClick={() => handleUpdate(selectedId)} />
         <Button label="Delete" onClick={() => handleDelete(selectedId)} />
       </div>
-
       <p>{message}</p>
     </div>
   );
@@ -212,16 +184,46 @@ function Button({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-/* 如何用上hashMap */
-// const UserListHashMap = useMemo(
-//   () => generateUserListHashMap(userList),
-//   [userList]
-// );
-
-// function generateUserListHashMap(userList: User[]) {
-//   const userListHashMap = new Map();
-//   userList.forEach((user) => {
-//     userListHashMap.set(user.id, user);
-//   });
-//   return userListHashMap;
-// }
+function useIdAndInputsState() {
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [userInputs, setUserInputs] = useState<UserInputs>({
+    name: "",
+    surname: "",
+  });
+  function handleIdAndInputsChange(
+    id: string | undefined,
+    userList: User[] | undefined
+  ) {
+    setSelectedId(id);
+    if (id === undefined || userList === undefined) {
+      setUserInputs({ name: "", surname: "" });
+      return;
+    }
+    const matchedName = userList!.find((name) => name.id === id)!;
+    setUserInputs({ name: matchedName.name, surname: matchedName.surname });
+  }
+  function handleInputsChange(inputName: string, value: string) {
+    switch (inputName) {
+      case "name":
+        setUserInputs({
+          name: value,
+          surname: userInputs?.surname ?? "",
+        });
+        return;
+      case "surname":
+        setUserInputs({
+          name: userInputs?.name ?? "",
+          surname: value,
+        });
+        return;
+      default:
+        throw new Error(`${value} is an invalid value`);
+    }
+  }
+  return [
+    selectedId,
+    userInputs,
+    handleIdAndInputsChange,
+    handleInputsChange,
+  ] as const;
+}
