@@ -3,8 +3,8 @@ import { assertNever } from "../utils/assertNever";
 
 export function FlightBookerTwo() {
   const [combobox, setCombobox] = useState<"one-way" | "return">("one-way");
-  const [outboundDate, setOutboundDate] = useState<string>("");
-  const [returnDate, setReturnDate] = useState<string>("");
+  const [outboundFlight, setOutboundFlight] = useState<string>("");
+  const [returnFlight, setReturnFlight] = useState<string>("");
   const [message, setMessage] = useState<string>("");
 
   function changeFlightType(event: React.ChangeEvent<HTMLSelectElement>) {
@@ -22,18 +22,18 @@ export function FlightBookerTwo() {
 
   function updateOutbound(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.value) {
-      setOutboundDate("");
+      setOutboundFlight("");
       return;
     }
-    setOutboundDate(event.target.value);
+    setOutboundFlight(event.target.value);
     if (isReturnInputDisable(combobox)) {
-      setReturnDate(event.target.value);
+      setReturnFlight(event.target.value);
     }
   }
 
   function handleBook() {
-    const message = `You have booked a ${combobox} flight on ${outboundDate} ${
-      combobox === "return" ? `and ${returnDate}` : ""
+    const message = `You have booked a ${combobox} flight on ${outboundFlight} ${
+      combobox === "return" ? `and ${returnFlight}` : ""
     } `;
     setMessage(message);
   }
@@ -51,14 +51,14 @@ export function FlightBookerTwo() {
       </select>
       <input
         type="text"
-        aria-label="outbound date"
+        aria-label="outboundFlight date"
         placeholder="DD.MM.YYYY"
         className={` m-2 rounded border  border-black ${
-          isValidDate(!outboundDate ? "" : parseDate(outboundDate))
+          isValidDate(!outboundFlight ? "" : parseDate(outboundFlight))
             ? ""
             : "bg-red-500"
         }`}
-        value={outboundDate}
+        value={outboundFlight}
         onChange={updateOutbound}
       />
       <input
@@ -66,18 +66,21 @@ export function FlightBookerTwo() {
         aria-label="return date"
         placeholder="DD.MM.YYYY"
         className={` m-2 rounded border  border-black disabled:bg-slate-200  disabled:text-slate-400 ${
-          isValidDate(!returnDate ? "" : parseDate(returnDate))
+          isValidDate(
+            !returnFlight ? "" : parseDate(returnFlight),
+            !outboundFlight ? "" : parseDate(outboundFlight)
+          )
             ? ""
             : "bg-red-500"
         }`}
-        value={combobox === "return" ? returnDate : outboundDate}
+        value={combobox === "return" ? returnFlight : outboundFlight}
         disabled={isReturnInputDisable(combobox)}
-        onChange={(e) => setReturnDate(e.target.value)}
+        onChange={(e) => setReturnFlight(e.target.value)}
       />
       <button
         type="submit"
         className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 disabled:text-slate-400"
-        disabled={isButtonDisabled(outboundDate, returnDate)}
+        disabled={isButtonDisabled(combobox, outboundFlight, returnFlight)}
         onClick={handleBook}
       >
         Book
@@ -98,30 +101,57 @@ function isReturnInputDisable(input: "one-way" | "return"): boolean {
   }
 }
 
-function isButtonDisabled(inputOne: string, inputTwo: string): boolean {
+function isButtonDisabled(
+  combobox: "one-way" | "return",
+  inputOne: string,
+  inputTwo: string
+): boolean {
+  const inputOneDate = parseDate(inputOne);
+  const inputTwoDate = parseDate(inputTwo);
+  if (combobox === "one-way") {
+    return (
+      inputOne === "" ||
+      inputTwo === "" ||
+      inputOneDate === null ||
+      inputTwoDate === null ||
+      !isValidDate(inputOneDate)
+    );
+  } // ?? simple or complex
   return (
     inputOne === "" ||
     inputTwo === "" ||
-    !isValidDate(inputOne) ||
-    !isValidDate(inputTwo) ||
-    new Date(inputOne).getTime() > new Date(inputTwo).getTime()
+    !isValidDate(inputOneDate) ||
+    !isValidDate(inputTwoDate) ||
+    inputOneDate === null ||
+    inputTwoDate === null ||
+    inputOneDate.getTime() > inputOneDate.getTime()
   );
 }
 
-function isValidDate(input: string | null): boolean {
-  switch (input) {
+function isValidDate(
+  inputOne: "" | Date | null,
+  inputForComparison?: "" | Date | null
+): boolean {
+  switch (inputOne) {
     case "":
       return true;
     case null:
       return false;
     default:
       const currentDateNumber = new Date().getTime();
-      const inputDate = new Date(input).getTime();
-      return inputDate > currentDateNumber;
+      const inputOneDateNumber = inputOne.getTime();
+      if (inputForComparison) {
+        const inputTwoDateNumber = inputForComparison.getTime();
+        return (
+          inputOneDateNumber > currentDateNumber &&
+          inputOneDateNumber >= inputTwoDateNumber
+        );
+      }
+      return inputOneDateNumber > currentDateNumber;
   }
 }
 
-export function parseDate(input: string): string | null {
+export function parseDate(input: string): Date | null {
   const regex = /^(0?[1-9]|[12]\d|3[01]).(0?[1-9]|1[0-2]).\d{4}$/;
   if (!regex.test(input)) {
     return null;
@@ -132,7 +162,7 @@ export function parseDate(input: string): string | null {
     const month = Number(match[2]);
     const year = Number(match[3]);
     const formatDate = year + "-" + month + "-" + day;
-    return formatDate;
+    return new Date(formatDate);
   }
   return null;
 }
