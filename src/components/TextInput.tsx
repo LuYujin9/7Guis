@@ -5,7 +5,7 @@ type Props = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export function Input({ children, name, value, onChange }: Props) {
+export function TextInput({ children, name, value, onChange }: Props) {
   return (
     <label>
       {children}

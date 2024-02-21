@@ -1,12 +1,13 @@
 import { ChangeEvent, useState } from "react";
+import { TemperatureInput } from "./TemperatureInput";
 
 type Unit = {
   name: string;
   toCelsius: (arg0: number) => number;
   fromCelsius: (arg0: number) => number;
 };
-//type Units=[Unit,...Unit[]]
 type Units = Unit[] & { 0: Unit };
+type Temperature = number | "";
 
 const units = [
   {
@@ -36,13 +37,11 @@ const units = [
       return Math.floor((celsius + 273.15) * 100) / 100;
     },
   },
-] satisfies Units; //single source of truth
-
-type Temperature = number | "";
+] satisfies Units;
 
 export function TemperatureConverter({ id }: { id: string }) {
-  const [celsius, setCelsius] = useSyncedState();
-  const [focusedInputData, setFocusedInputData] = useState<{
+  const [celsius, setCelsius] = useState<Temperature>("");
+  const [focusedInput, setFocusedInput] = useState<{
     name: string;
     value: string;
   } | null>(null);
@@ -52,9 +51,18 @@ export function TemperatureConverter({ id }: { id: string }) {
     ? "The value is invalid"
     : "";
 
+  function setUpdatedCelsius(name: string, input: "" | number) {
+    if (input === "") {
+      setCelsius("");
+      return;
+    }
+    const celsius = units.find((unit) => unit.name === name)!.toCelsius(input);
+    setCelsius(celsius);
+  }
+
   function calculateInputDisplayValue(name: string): string {
-    if (focusedInputData?.name === name) {
-      return focusedInputData.value;
+    if (focusedInput?.name === name) {
+      return focusedInput.value;
     }
     return celsius === ""
       ? ""
@@ -62,19 +70,19 @@ export function TemperatureConverter({ id }: { id: string }) {
           .find((unit) => unit.name === name)!
           .fromCelsius(celsius)
           .toString();
-  } // is a function better?
+  }
 
   function handelInputChange(
     name: string,
     e: React.ChangeEvent<HTMLInputElement>
   ) {
     const input = e.target.value;
-    setFocusedInputData({
+    setFocusedInput({
       name: e.target.name,
       value: input,
     });
     if (!isNaN(Number(input)) && input !== "-") {
-      setCelsius(name, input ? Number(input) : "");
+      setUpdatedCelsius(name, input ? Number(input) : "");
     }
   }
 
@@ -87,16 +95,7 @@ export function TemperatureConverter({ id }: { id: string }) {
         <TemperatureInput
           key={index}
           name={name}
-          value={
-            focusedInputData?.name === name
-              ? focusedInputData.value
-              : celsius === ""
-              ? ""
-              : units
-                  .find((unit) => unit.name === name)!
-                  .fromCelsius(celsius)
-                  .toString() //not easy to understand the logic
-          }
+          value={calculateInputDisplayValue(name)}
           isValueInvalid={isValueInvalid(celsius ? celsius : "")}
           onChange={(e) => {
             handelInputChange(name, e);
@@ -108,77 +107,9 @@ export function TemperatureConverter({ id }: { id: string }) {
   );
 }
 
-const useSyncedState = (): [
-  Temperature,
-  (name: string, input: "" | number) => void
-] => {
-  const [celsius, setCelsius] = useState<Temperature>("");
-  function setUpdatedCelsius(name: string, input: "" | number) {
-    if (input === "") {
-      setCelsius("");
-      return;
-    }
-    const celsius = units.find((unit) => unit.name === name)!.toCelsius(input);
-    setCelsius(celsius);
-  }
-  return [celsius, setUpdatedCelsius];
-};
-
 function isValueInvalid(value: number | "") {
   if (value === "") {
     return false;
   }
   return value < -273.15 ? true : false;
 }
-
-function TemperatureInput({
-  name,
-  value,
-  onChange,
-  isValueInvalid,
-}: {
-  name: string;
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  isValueInvalid: boolean;
-}) {
-  return (
-    <label className="flex-auto">
-      <input
-        className={` m-2 w-20 rounded border  border-black ${
-          isValueInvalid ? "bg-red-500" : ""
-        }`}
-        type="text"
-        name={name}
-        value={value}
-        onChange={onChange}
-      />
-      {name}
-    </label>
-  );
-}
-
-// const useSyncedState = (): [
-//   TemperatureData,
-//   (name: string, newValue: "" | number) => void
-// ] => {
-//   const [values, setValues] = useState<TemperatureData>({});
-//   function calculate(name: string, input: "" | number) {
-//     const toCelsius = units.find((unit) => unit.name === name)!.toCelsius;
-//     if (input === "") {
-//       const entries = units.map((unit) => {
-//         return [unit.name, ""];
-//       });
-//       return Object.fromEntries(entries);
-//     }
-//     const celsius = toCelsius(input);
-//     const entries = units.map((unit) => {
-//       return [unit.name, unit.fromCelsius(celsius)];
-//     });
-//     return Object.fromEntries(entries);
-//   }
-//   function setUpdatedValues(name: string, newValue: "" | number) {
-//     setValues(calculate(name, newValue));
-//   }
-//   return [values, setUpdatedValues];
-// };

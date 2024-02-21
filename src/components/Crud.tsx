@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
-import { Input } from "./Input";
+import { TextInput } from "./TextInput";
 import { assertNever } from "../utils/assertNever";
 
-/* how to type it, there should be always at least a user name in name list. */
 type User = {
   name: string;
   surname: string;
@@ -15,15 +14,15 @@ type UserList<User> = [User, ...User[]];
 const initialUserList: UserList<User> = [
   { name: "Jane", surname: "Davis", id: "0" },
   { name: "John", surname: "Wilson", id: "1" },
-  { name: "Tisch", surname: "Roman", id: "2" },
+  { name: "Jack", surname: "Roman", id: "2" },
   { name: "Isabella", surname: "White", id: "3" },
   { name: "Jane", surname: "Davis", id: "4" },
   { name: "John", surname: "Wilson", id: "5" },
-  { name: "Tisch", surname: "Roman", id: "6" },
+  { name: "Jack", surname: "Roman", id: "6" },
   { name: "Isabella", surname: "White", id: "7" },
   { name: "Jane", surname: "Davis", id: "8" },
   { name: "John", surname: "Wilson", id: "9" },
-  { name: "Tisch", surname: "Roman", id: "10" },
+  { name: "Jack", surname: "Roman", id: "10" },
 ];
 
 export function Crud() {
@@ -88,7 +87,7 @@ export function Crud() {
     setMessage("The name is deleted");
   }
 
-  function handleChangeFilter(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFilterValue(e.target.value); //necessary to check, wether selected id in filteredUserList ? a better way?
     const isSelectedIdInFilteredUserList = filterUserList(
       e.target.value,
@@ -100,7 +99,7 @@ export function Crud() {
     }
   }
 
-  function handleChangeUserInputs(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleUserInputsChange(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
     const inputName = event.target.name;
     switch (inputName) {
@@ -140,11 +139,11 @@ export function Crud() {
 
   return (
     <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5  md:bg-green-100 lg:w-4/5  lg:bg-red-100">
-      <Input
+      <TextInput
         children="Filter prefix:"
         name="filter"
         value={filterValue}
-        onChange={handleChangeFilter}
+        onChange={handleFilterChange}
       />
       <select
         className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
@@ -158,21 +157,21 @@ export function Crud() {
         value={selectedId}
       >
         {filteredUserList.map((user) => {
-          return <NameBox key={user.id} user={user} />;
+          return <UserOption key={user.id} user={user} />;
         })}
       </select>
       <div>
-        <Input
+        <TextInput
           children="Name:"
           name="name"
           value={userInputs?.name ?? ""}
-          onChange={handleChangeUserInputs}
+          onChange={handleUserInputsChange}
         />
-        <Input
+        <TextInput
           children="Surname:"
           name="surname"
           value={userInputs?.surname ?? ""}
-          onChange={handleChangeUserInputs}
+          onChange={handleUserInputsChange}
         />
       </div>
       <div>
@@ -180,7 +179,6 @@ export function Crud() {
         <Button label="Update" onClick={() => handleUpdate(selectedId)} />
         <Button label="Delete" onClick={() => handleDelete(selectedId)} />
       </div>
-
       <p>{message}</p>
     </div>
   );
@@ -193,7 +191,7 @@ function filterUserList(input: string, list: User[]) {
   );
 }
 
-function NameBox({ user }: { user: User }) {
+function UserOption({ user }: { user: User }) {
   return (
     <option className="text-left pl-2" value={user.id}>
       {user.name}, {user.surname}
@@ -211,17 +209,3 @@ function Button({ label, onClick }: { label: string; onClick: () => void }) {
     </button>
   );
 }
-
-/* 如何用上hashMap */
-// const UserListHashMap = useMemo(
-//   () => generateUserListHashMap(userList),
-//   [userList]
-// );
-
-// function generateUserListHashMap(userList: User[]) {
-//   const userListHashMap = new Map();
-//   userList.forEach((user) => {
-//     userListHashMap.set(user.id, user);
-//   });
-//   return userListHashMap;
-// }

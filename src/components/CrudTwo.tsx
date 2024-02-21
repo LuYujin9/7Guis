@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
-import { Input } from "./Input";
+import { TextInput } from "./TextInput";
 import { assertNever } from "../utils/assertNever";
 
 /* how to type it, there should be always at least a user name in name list. */
@@ -85,7 +85,7 @@ export function CrudTwo() {
     setMessage("The name is deleted");
   }
 
-  function handleChangeFilter(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFilterValue(e.target.value); //necessary to check, wether selected id in filteredUserList ? a better way?
     const isSelectedIdInFilteredUserList = filterUserList(
       e.target.value,
@@ -112,11 +112,11 @@ export function CrudTwo() {
 
   return (
     <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5  md:bg-green-100 lg:w-4/5  lg:bg-red-100">
-      <Input
+      <TextInput
         children="Filter prefix:"
         name="filter"
         value={filterValue}
-        onChange={handleChangeFilter}
+        onChange={handleFilterChange}
       />
       <select
         className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
@@ -131,7 +131,7 @@ export function CrudTwo() {
         })}
       </select>
       <div>
-        <Input
+        <TextInput
           children="Name:"
           name="name"
           value={userInputs?.name ?? ""}
@@ -139,7 +139,7 @@ export function CrudTwo() {
             setUserInputs(e.target.name, e.target.value);
           }}
         />
-        <Input
+        <TextInput
           children="Surname:"
           name="surname"
           value={userInputs?.surname ?? ""}
