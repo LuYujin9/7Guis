@@ -135,6 +135,7 @@ function isValidDate(
   switch (inputOne) {
     case "":
       return true;
+      [];
     case null:
       return false;
     default:
@@ -152,17 +153,37 @@ function isValidDate(
 }
 
 export function parseDate(input: string): Date | null {
-  const regex = /^(0?[1-9]|[12]\d|3[01]).(0?[1-9]|1[0-2]).\d{4}$/;
+  const regex = /^\d{1,2}.\d{1,2}.\d{4}$/;
   if (!regex.test(input)) {
     return null;
   }
   const match = input.match(/^([\d]*)\.([\d]*)\.([\d]*)/);
-  if (match) {
-    const day = Number(match[1]);
-    const month = Number(match[2]);
-    const year = Number(match[3]);
-    const formatDate = year + "-" + month + "-" + day;
-    return new Date(formatDate);
+  if (!match) {
+    return null;
   }
-  return null;
+  const lunarMonth = [4, 6, 9, 11];
+  const year = Number(match[3]);
+  const month = Number(match[2]);
+  const day = Number(match[1]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+  if (month === 2 && isLeapYear(year) && day > 29) {
+    return null;
+  }
+  if (month === 2 && !isLeapYear(year) && day > 28) {
+    return null;
+  }
+  if (lunarMonth.includes(month) && day > 30) {
+    return null;
+  }
+  const formatDate = year + "-" + month + "-" + day;
+  return new Date(formatDate);
+}
+
+export function isLeapYear(input: number) {
+  if ((input % 100 === 0 && input % 400 !== 0) || input % 4 !== 0) {
+    return false;
+  }
+  return true;
 }
