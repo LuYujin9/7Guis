@@ -49,7 +49,12 @@ export function FlightBooker() {
 
   return (
     <div>
-      <select name="flight" id="flight" onChange={changeFlightType}>
+      <select
+        className="border border-black"
+        name="flight"
+        id="flight"
+        onChange={changeFlightType}
+      >
         <option value="one-way">one-way-flight</option>
         <option value="return">return flight</option>
       </select>
@@ -57,7 +62,9 @@ export function FlightBooker() {
         type="date"
         aria-label="outbound date"
         placeholder="DD.MM.YYYY"
-        className={isValidDate(outboundDate) ? "" : "invalid"}
+        className={` m-2  rounded border  border-black  ${
+          isValidDate(outboundDate) ? "" : "bg-red-500"
+        }`}
         value={outboundDate ? outboundDate : ""}
         onChange={updateOutbound}
       />
@@ -65,13 +72,16 @@ export function FlightBooker() {
         type="date"
         aria-label="return date"
         placeholder="DD.MM.YYYY"
-        className={`${isValidDate(returnDate) ? "" : "invalid"} `}
+        className={` m-2  rounded border  border-black  disabled:bg-slate-200  disabled:text-slate-400 ${
+          isValidDate(outboundDate) ? "" : "bg-red-500"
+        }`}
         value={returnDate ? returnDate : ""}
         disabled={isReturnInputDisable(combobox)}
         onChange={updateReturn}
       />
       <button
         type="submit"
+        className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 disabled:text-slate-400"
         disabled={isButtonDisabled(outboundDate, returnDate)}
         onClick={handleBook}
       >
