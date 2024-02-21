@@ -52,17 +52,18 @@ export function TemperatureConverter({ id }: { id: string }) {
     ? "The value is invalid"
     : "";
 
-  function calculateInputDisplayValue(name: string): string {
-    if (focusedInputData?.name === name) {
-      return focusedInputData.value;
-    }
-    return celsius === ""
-      ? ""
-      : units
-          .find((unit) => unit.name === name)!
-          .fromCelsius(celsius)
-          .toString();
-  } // is a function better?
+  // a function will be better?
+  // function calculateInputDisplayValue(name: string): string {
+  //   if (focusedInputData?.name === name) {
+  //     return focusedInputData.value;
+  //   }
+  //   return celsius === ""
+  //     ? ""
+  //     : units
+  //         .find((unit) => unit.name === name)!
+  //         .fromCelsius(celsius)
+  //         .toString();
+  // }
 
   function handelInputChange(
     name: string,

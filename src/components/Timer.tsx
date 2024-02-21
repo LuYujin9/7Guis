@@ -14,10 +14,11 @@ export function Timer() {
           <div
             className=" z-1 w-1/2 h-6  bg-blue-500 "
             style={{ width: `${calculatePercentage(time, duration)}` }}
+            aria-label="Block to show the elapsed time"
           ></div>
         </div>
       </div>
-      <p>{duration}s</p>
+      <p aria-label="Paragraph to show the duration">{duration}s</p>
       <label>
         Duration:
         <input
