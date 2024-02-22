@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { Timer } from "./Timer";
+import { Timer, calculatePercentage } from "./Timer";
 
 test("renders Timer component", () => {
   render(<Timer />);
@@ -31,7 +31,6 @@ test("sets the duration by input", async () => {
   render(<Timer />);
   const input = screen.getByRole("slider", { name: "Duration:" });
   fireEvent.change(input, { target: { value: "60" } });
-  // await userEvent.type(input, "60");
   const paragraph = screen.getByLabelText("Paragraph to show the duration");
   expect(paragraph).toHaveTextContent("6s");
 });
@@ -52,4 +51,10 @@ test("stops the timer after elapsed time greater as duration", async () => {
   await vi.advanceTimersByTimeAsync(3000);
   const widthAfterStop = timerBlock.style.width;
   expect(widthAfterStop).toBe("100%");
+});
+
+test("calculatePercentage return the right value", () => {
+  expect(calculatePercentage(1, 0)).toBe("0");
+  expect(calculatePercentage(0, 1)).toBe("0");
+  expect(calculatePercentage(1, 2)).toBe("50%");
 });

@@ -1,12 +1,13 @@
 import { ChangeEvent, useState } from "react";
 
+// in this vision, input type is still number. not good.
 type Unit = {
   name: string;
   toCelsius: (arg0: number) => number;
   fromCelsius: (arg0: number) => number;
 };
-//type Units=[Unit,...Unit[]]
 type Units = Unit[] & { 0: Unit };
+type Temperature = number | "";
 
 const units = [
   {
@@ -36,21 +37,30 @@ const units = [
       return Math.floor((celsius + 273.15) * 100) / 100;
     },
   },
-] satisfies Units; //single source of truth
-
-type Temperature = number | "";
+] satisfies Units;
 
 export function TemperatureConverterTwo({ id }: { id: string }) {
-  const [celsius, setCelsius] = useSyncedState();
+  const [celsius, setCelsius] = useState<Temperature>("");
   const [focusedInputData, setFocusedInputData] = useState<{
     name: string;
     value: string;
-  } | null>(null);
+  }>({
+    name: "",
+    value: "",
+  });
 
   const unitNames = units.map((unit) => unit.name);
   const message = isValueInvalid(celsius ? celsius : "")
     ? "The value is invalid"
     : "";
+
+  function setUpdatedCelsius(name: string, input: "" | number) {
+    setCelsius(
+      input === ""
+        ? ""
+        : units.find((unit) => unit.name === name)!.toCelsius(input)
+    );
+  }
 
   function calculateInputDisplayValue(name: string): string {
     if (focusedInputData?.name === name) {
@@ -64,6 +74,24 @@ export function TemperatureConverterTwo({ id }: { id: string }) {
           .toString();
   }
 
+  function handelInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.target.value;
+    const name = e.target.name;
+    const inputAction = (e.nativeEvent as InputEvent).inputType; //underlying browser event from DOM API, allow to use? disadvantage?
+    setFocusedInputData({
+      name: name,
+      value: input,
+    });
+    console.log(focusedInputData.value === "", input);
+    if (input !== "") {
+      setUpdatedCelsius(name, Number(input));
+      return;
+    }
+    if (isInputEmpty(inputAction, focusedInputData?.value)) {
+      setUpdatedCelsius(name, "");
+    }
+  }
+
   return (
     <div
       className="flex flex-col w-[15rem] m-auto mt-3 rounded bg-blue-100 sm:flex-row sm:w-[25rem] sm:p-3 sm:bg-green-100 "
@@ -75,43 +103,13 @@ export function TemperatureConverterTwo({ id }: { id: string }) {
           name={name}
           value={calculateInputDisplayValue(name)}
           isValueInvalid={isValueInvalid(celsius ? celsius : "")}
-          onChange={(e) => {
-            const input = e.target.value;
-            const inputAction = (e.nativeEvent as InputEvent).inputType; //underlying browser event from DOM API, use or better not? disadvantage?
-            setFocusedInputData({
-              name: e.target.name,
-              value: input,
-            });
-            if (input !== "") {
-              setCelsius(name, Number(input));
-              return;
-            }
-            if (shouldInputEmpty(inputAction, focusedInputData?.value)) {
-              setCelsius(name, "");
-            }
-          }}
+          onChange={(e) => handelInputChange(e)}
         />
       ))}
       <p>{message}</p>
     </div>
   );
 }
-
-const useSyncedState = (): [
-  Temperature,
-  (name: string, input: "" | number) => void
-] => {
-  const [celsius, setCelsius] = useState<Temperature>("");
-  function setUpdatedCelsius(name: string, input: "" | number) {
-    if (input === "") {
-      setCelsius("");
-      return;
-    }
-    const celsius = units.find((unit) => unit.name === name)!.toCelsius(input);
-    setCelsius(celsius);
-  }
-  return [celsius, setUpdatedCelsius];
-};
 
 function isValueInvalid(value: number | "") {
   if (value === "") {
@@ -120,15 +118,13 @@ function isValueInvalid(value: number | "") {
   return value < -273.15 ? true : false;
 }
 
-function shouldInputEmpty(
-  inputAction: string,
-  prevInputValue: string | undefined
-) {
+function isInputEmpty(inputAction: string, prevInputValue: string | undefined) {
+  console.log(prevInputValue == "");
   return (
     (inputAction === "deleteContentBackward" && prevInputValue?.length === 1) ||
-    (prevInputValue?.charAt(0) === "-" && prevInputValue?.length === 2)
+    (prevInputValue?.charAt(0) === "-" && prevInputValue?.length === 2) //can"t check e.g. "-1" changed to "-" or "-1."
   );
-} // I don't like it.
+}
 
 function TemperatureInput({
   name,

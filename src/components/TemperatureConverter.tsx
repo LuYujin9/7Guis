@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import { TemperatureInput } from "./TemperatureInput";
 
 type Unit = {
@@ -52,12 +52,11 @@ export function TemperatureConverter({ id }: { id: string }) {
     : "";
 
   function setUpdatedCelsius(name: string, input: "" | number) {
-    if (input === "") {
-      setCelsius("");
-      return;
-    }
-    const celsius = units.find((unit) => unit.name === name)!.toCelsius(input);
-    setCelsius(celsius);
+    setCelsius(
+      input === ""
+        ? ""
+        : units.find((unit) => unit.name === name)!.toCelsius(input)
+    );
   }
 
   function calculateInputDisplayValue(name: string): string {

@@ -3,8 +3,8 @@ import { assertNever } from "../utils/assertNever";
 
 export function FlightBooker() {
   const [flightType, setFlightType] = useState<"one-way" | "return">("one-way");
-  const [outboundDate, setOutboundDate] = useState<string | undefined>();
-  const [returnDate, setReturnDate] = useState<string | undefined>();
+  const [outboundDate, setOutboundDate] = useState<string>("");
+  const [returnDate, setReturnDate] = useState<string>("");
   const [message, setMessage] = useState<string>("");
 
   function handleFlightTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
@@ -14,14 +14,16 @@ export function FlightBooker() {
         return;
       case "one-way":
         setFlightType("one-way");
-        setReturnDate(outboundDate); //when it not updated, can"t book the right time. solution is in the component FlightBookerTwo
+        setReturnDate(outboundDate); //keep it? because without it, there must be more lines to check isButtonDisabled
         return;
       default:
         throw new Error(`value should not exist ${event.target.value}`);
     }
   }
 
-  function updateOutbound(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleOutboundDateChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
     if (!event.target.value) {
       setOutboundDate("");
       return;
@@ -33,8 +35,8 @@ export function FlightBooker() {
   }
 
   function handleBook() {
-    const message = `You have booked a ${flightType} flight on ${outboundDate} ${
-      flightType === "return" ? `and ${returnDate}` : ""
+    const message = `You have booked a ${flightType} flight on ${outboundDate}(yy-mm-dd) ${
+      flightType === "return" ? `and ${returnDate}(yy-mm-dd)` : ""
     } `;
     setMessage(message);
   }
@@ -43,8 +45,8 @@ export function FlightBooker() {
     <div>
       <select
         className="border border-black"
-        name="flight"
-        id="flight"
+        name="flightType"
+        id="flightType"
         onChange={handleFlightTypeChange}
       >
         <option value="one-way">one-way-flight</option>
@@ -57,8 +59,8 @@ export function FlightBooker() {
         className={` m-2  rounded border  border-black  ${
           isDateValid(outboundDate) ? "" : "bg-red-500"
         }`}
-        value={outboundDate ? outboundDate : ""}
-        onChange={updateOutbound}
+        value={outboundDate}
+        onChange={handleOutboundDateChange}
       />
       <input
         type="date"
@@ -67,14 +69,13 @@ export function FlightBooker() {
         className={` m-2  rounded border  border-black  disabled:bg-slate-200  disabled:text-slate-400 ${
           isDateValid(outboundDate) ? "" : "bg-red-500"
         }`}
-        value={returnDate ? returnDate : ""}
+        value={flightType === "return" ? returnDate : outboundDate}
         disabled={isReturnInputDisable(flightType)}
-        onChange={(e) => {
-          setReturnDate(e.target.value ?? "");
-        }}
+        onChange={(e) => setReturnDate(e.target.value)}
       />
       <button
         type="submit"
+        className="flex-auto m-2 w-20 bg-blue-300  text-gray-700 disabled:text-slate-400"
         disabled={isButtonDisabled(outboundDate, returnDate)}
         onClick={handleBook}
       >
@@ -109,8 +110,8 @@ function isButtonDisabled(
   );
 }
 
-function isDateValid(input: string | undefined): boolean {
-  if (input === undefined) {
+function isDateValid(input: string): boolean {
+  if (!input) {
     return true;
   }
   const currentDateNumber = new Date().getTime();

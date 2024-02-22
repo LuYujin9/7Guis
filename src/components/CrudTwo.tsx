@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 import { TextInput } from "./TextInput";
 import { assertNever } from "../utils/assertNever";
 
-/* how to type it, there should be always at least a user name in name list. */
+// In this vision, a hook is created, so that the selectedId and userInputs change in one function. good?
 type User = {
   name: string;
   surname: string;
@@ -77,16 +77,14 @@ export function CrudTwo() {
       return;
     }
     const indexToDelete = userList.findIndex((user) => user.id === selectedId);
-    if (indexToDelete !== -1)
-      // should I keep this 'if', even I know that, there must be a indexToDelete.
-      userList.splice(indexToDelete, 1);
+    if (indexToDelete !== -1) userList.splice(indexToDelete, 1);
     resetState("selectedIdAndUserInputs");
     resetState("filterValue");
     setMessage("The name is deleted");
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFilterValue(e.target.value); //necessary to check, wether selected id in filteredUserList ? a better way?
+    setFilterValue(e.target.value);
     const isSelectedIdInFilteredUserList = filterUserList(
       e.target.value,
       userList
@@ -127,7 +125,7 @@ export function CrudTwo() {
         value={selectedId}
       >
         {filteredUserList.map((user) => {
-          return <NameBox key={user.id} user={user} />;
+          return <UserOption key={user.id} user={user} />;
         })}
       </select>
       <div>
@@ -165,7 +163,7 @@ export function filterUserList(input: string, list: User[]) {
   );
 }
 
-function NameBox({ user }: { user: User }) {
+function UserOption({ user }: { user: User }) {
   return (
     <option className="text-left pl-2" value={user.id}>
       {user.name}, {user.surname}

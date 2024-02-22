@@ -40,9 +40,12 @@ export function Timer() {
   );
 }
 
-function calculatePercentage(Numerator: number, Denominator: number): string {
-  if (Denominator !== 0) {
-    return `${(Numerator / Denominator) * 100}%`;
+export function calculatePercentage(
+  numerator: number,
+  denominator: number
+): string {
+  if (numerator !== 0 && denominator !== 0) {
+    return `${(numerator / denominator) * 100}%`;
   }
   return "0";
 }
