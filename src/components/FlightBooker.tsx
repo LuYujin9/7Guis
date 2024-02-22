@@ -129,7 +129,7 @@ function isDateValid(input: "" | Date | null): boolean {
 }
 
 export function parseDate(input: string): Date | null {
-  const regex = /^\d{1,2}.\d{1,2}.\d{4}$/;
+  const regex = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
   if (!regex.test(input)) {
     return null;
   }
