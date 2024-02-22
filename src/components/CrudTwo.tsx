@@ -15,15 +15,15 @@ type UserList<User> = [User, ...User[]];
 const initialNameList: UserList<User> = [
   { name: "Jane", surname: "Davis", id: "0" },
   { name: "John", surname: "Wilson", id: "1" },
-  { name: "Tisch", surname: "Roman", id: "2" },
+  { name: "Jack", surname: "Roman", id: "2" },
   { name: "Isabella", surname: "White", id: "3" },
   { name: "Jane", surname: "Davis", id: "4" },
   { name: "John", surname: "Wilson", id: "5" },
-  { name: "Tisch", surname: "Roman", id: "6" },
+  { name: "Jack", surname: "Roman", id: "6" },
   { name: "Isabella", surname: "White", id: "7" },
   { name: "Jane", surname: "Davis", id: "8" },
   { name: "John", surname: "Wilson", id: "9" },
-  { name: "Tisch", surname: "Roman", id: "10" },
+  { name: "Jack", surname: "Roman", id: "10" },
 ];
 
 export function CrudTwo() {
@@ -158,7 +158,7 @@ export function CrudTwo() {
   );
 }
 
-function filterUserList(input: string, list: User[]) {
+export function filterUserList(input: string, list: User[]) {
   const filterValue = input.toLowerCase();
   return list.filter((name) =>
     name.surname.toLowerCase().startsWith(filterValue)
@@ -184,7 +184,7 @@ function Button({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-function useIdAndInputsState() {
+export function useIdAndInputsState() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [userInputs, setUserInputs] = useState<UserInputs>({
     name: "",
@@ -200,7 +200,10 @@ function useIdAndInputsState() {
       return;
     }
     const matchedName = userList!.find((name) => name.id === id)!;
-    setUserInputs({ name: matchedName.name, surname: matchedName.surname });
+    setUserInputs({
+      name: matchedName.name,
+      surname: matchedName.surname,
+    });
   }
   function handleInputsChange(inputName: string, value: string) {
     switch (inputName) {
