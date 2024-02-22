@@ -14,6 +14,7 @@ export function FlightBookerTwo() {
         return;
       case "one-way":
         setFlightType("one-way");
+        setReturnDate(outboundDate); //keep it? because without it, there must be more lines to check isButtonDisabled
         return;
       default:
         throw new Error(`value should not exist ${event.target.value}`);
@@ -79,7 +80,7 @@ export function FlightBookerTwo() {
       <button
         type="submit"
         className="flex-auto m-2 w-20 bg-blue-300 text-gray-700 disabled:text-slate-400"
-        disabled={isButtonDisabled(flightType, outboundDate, returnDate)}
+        disabled={isButtonDisabled(outboundDate, returnDate)}
         onClick={handleBook}
       >
         Book
@@ -100,34 +101,49 @@ function isReturnInputDisable(input: "one-way" | "return"): boolean {
   }
 }
 
-function isButtonDisabled(
-  combobox: "one-way" | "return",
-  inputOne: string,
-  inputTwo: string
-): boolean {
-  const inputOneDate = parseDate(inputOne);
-  const inputTwoDate = parseDate(inputTwo);
-  if (combobox === "one-way") {
-    return (
-      inputOne === "" ||
-      inputTwo === "" ||
-      inputOneDate === null ||
-      !isDateValid(inputOneDate)
-    );
-  } // ??complexer
+//when setReturnDate(outboundDate)isn't use in line 17, the function will be like this.
+// function isButtonDisabled(
+//   flightType: "one-way" | "return",
+//   inputOne: string,
+//   inputTwo: string
+// ): boolean {
+//   const inputOneDate = parseDate(inputOne);
+//   const inputTwoDate = parseDate(inputTwo);
+//   if (flightType === "one-way") {
+//     return (
+//       inputOne === "" ||
+//       inputTwo === "" ||
+//       inputOneDate === null ||
+//       !isDateValid(inputOneDate)
+//     );
+//   } // ??complexer
+//   return (
+//     inputOne === "" ||
+//     inputTwo === "" ||
+//     !isDateValid(inputOneDate) ||
+//     !isDateValid(inputTwoDate) ||
+//     inputOneDate === null ||
+//     inputTwoDate === null ||
+//     inputOneDate.getTime() > inputTwoDate.getTime()
+//   );
+// }
+
+function isButtonDisabled(outboundDate: string, returnDate: string): boolean {
+  const parsedOutboundDate = parseDate(outboundDate);
+  const parsedReturnDate = parseDate(returnDate);
   return (
-    inputOne === "" ||
-    inputTwo === "" ||
-    !isDateValid(inputOneDate) ||
-    !isDateValid(inputTwoDate) ||
-    inputOneDate === null ||
-    inputTwoDate === null ||
-    inputOneDate.getTime() > inputTwoDate.getTime()
+    outboundDate === "" ||
+    returnDate === "" ||
+    !isDateValid(parsedOutboundDate) ||
+    !isDateValid(parsedReturnDate) ||
+    parsedOutboundDate === null ||
+    parsedReturnDate === null ||
+    parsedOutboundDate.getTime() > parsedReturnDate.getTime()
   );
 }
 
-function isDateValid(inputOne: "" | Date | null): boolean {
-  switch (inputOne) {
+function isDateValid(input: "" | Date | null): boolean {
+  switch (input) {
     case "":
       return true;
       [];
@@ -135,7 +151,7 @@ function isDateValid(inputOne: "" | Date | null): boolean {
       return false;
     default:
       const currentDateNumber = new Date().getTime();
-      const inputOneDateNumber = inputOne.getTime();
+      const inputOneDateNumber = input.getTime();
       return inputOneDateNumber > currentDateNumber;
   }
 }
