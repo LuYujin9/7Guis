@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { FlightBookerTwo } from "../components/FlightBookerTwo";
+import { FlightBooker } from "../components/FlightBooker";
 
 export function FlightBookerPage() {
   return (
     <>
-      <FlightBookerTwo />
+      <FlightBooker />
       <NavLink to="/">Back to homepage</NavLink>
     </>
   );

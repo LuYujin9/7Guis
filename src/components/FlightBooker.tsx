@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { assertNever } from "../utils/assertNever";
 
-export function FlightBookerTwo() {
+export function FlightBooker() {
   const [flightType, setFlightType] = useState<"one-way" | "return">("one-way");
   const [outboundDate, setOutboundDate] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
@@ -14,7 +14,7 @@ export function FlightBookerTwo() {
         return;
       case "one-way":
         setFlightType("one-way");
-        setReturnDate(outboundDate); //keep it? because without it, there must be more lines to check isButtonDisabled
+        setReturnDate(outboundDate);
         return;
       default:
         throw new Error(`value should not exist ${event.target.value}`);
@@ -101,33 +101,6 @@ function isReturnInputDisable(input: "one-way" | "return"): boolean {
   }
 }
 
-//when setReturnDate(outboundDate)isn't use in line 17, the function will be like this.
-// function isButtonDisabled(
-//   flightType: "one-way" | "return",
-//   inputOne: string,
-//   inputTwo: string
-// ): boolean {
-//   const inputOneDate = parseDate(inputOne);
-//   const inputTwoDate = parseDate(inputTwo);
-//   if (flightType === "one-way") {
-//     return (
-//       inputOne === "" ||
-//       inputTwo === "" ||
-//       inputOneDate === null ||
-//       !isDateValid(inputOneDate)
-//     );
-//   } // ??complexer
-//   return (
-//     inputOne === "" ||
-//     inputTwo === "" ||
-//     !isDateValid(inputOneDate) ||
-//     !isDateValid(inputTwoDate) ||
-//     inputOneDate === null ||
-//     inputTwoDate === null ||
-//     inputOneDate.getTime() > inputTwoDate.getTime()
-//   );
-// }
-
 function isButtonDisabled(outboundDate: string, returnDate: string): boolean {
   const parsedOutboundDate = parseDate(outboundDate);
   const parsedReturnDate = parseDate(returnDate);
@@ -151,8 +124,7 @@ function isDateValid(input: "" | Date | null): boolean {
       return false;
     default:
       const currentDateNumber = new Date().getTime();
-      const inputOneDateNumber = input.getTime();
-      return inputOneDateNumber > currentDateNumber;
+      return input.getTime() > currentDateNumber;
   }
 }
 

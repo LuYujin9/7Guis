@@ -78,9 +78,7 @@ export function Crud() {
       return;
     }
     const indexToDelete = userList.findIndex((user) => user.id === selectedId);
-    if (indexToDelete !== -1)
-      // should I keep this 'if', even I know that, there must be a indexToDelete.
-      userList.splice(indexToDelete, 1);
+    if (indexToDelete !== -1) userList.splice(indexToDelete, 1);
     resetState("selectedId");
     resetState("userInputs");
     resetState("filterValue");
@@ -88,7 +86,7 @@ export function Crud() {
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFilterValue(e.target.value); //necessary to check, wether selected id in filteredUserList ? a better way?
+    setFilterValue(e.target.value);
     const isSelectedIdInFilteredUserList = filterUserList(
       e.target.value,
       userList
@@ -184,7 +182,7 @@ export function Crud() {
   );
 }
 
-function filterUserList(input: string, list: User[]) {
+export function filterUserList(input: string, list: User[]) {
   const filterValue = input.toLowerCase();
   return list.filter((name) =>
     name.surname.toLowerCase().startsWith(filterValue)

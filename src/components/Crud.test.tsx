@@ -1,4 +1,4 @@
-import { filterUserList } from "./CrudTwo";
+import { filterUserList } from "./Crud";
 import { expect, test } from "vitest";
 
 test("filterUserList returns a filtered name list, case-insensitive", () => {
@@ -12,22 +12,21 @@ test("filterUserList returns a filtered name list, case-insensitive", () => {
     { name: "Jack", surname: "Roman", id: "6" },
     { name: "Isabella", surname: "white", id: "7" },
   ];
-  const filteredUserListOne = filterUserList("w", userList);
-  const filteredUserListTwo = filterUserList("W", userList);
-
-  expect(filteredUserListOne).toStrictEqual([
+  expect(filterUserList("w", userList)).toStrictEqual([
     { name: "John", surname: "Wilson", id: "1" },
     { name: "Isabella", surname: "White", id: "3" },
     { name: "John", surname: "wilson", id: "5" },
     { name: "Isabella", surname: "white", id: "7" },
   ]);
-  expect(filteredUserListOne).toStrictEqual(filteredUserListTwo);
+  expect(filterUserList("W", userList)).toStrictEqual(
+    filterUserList("w", userList)
+  );
 
-  const filteredUserListThree = filterUserList("wH", userList);
-  const filteredUserListFour = filterUserList("Wh", userList);
-  expect(filteredUserListThree).toStrictEqual([
+  expect(filterUserList("wH", userList)).toStrictEqual([
     { name: "Isabella", surname: "White", id: "3" },
     { name: "Isabella", surname: "white", id: "7" },
   ]);
-  expect(filteredUserListThree).toStrictEqual(filteredUserListFour);
+  expect(filterUserList("Wh", userList)).toStrictEqual(
+    filterUserList("wH", userList)
+  );
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest";
-import { isLeapYear, parseDate } from "./FlightBookerTwo";
+import { isLeapYear, parseDate } from "./FlightBooker";
 
 describe("parseDate", () => {
   it("returns the correct date", () => {
