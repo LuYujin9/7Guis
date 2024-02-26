@@ -2,15 +2,17 @@ import { useState } from "react";
 import { assertNever } from "../utils/assertNever";
 
 export function FlightBooker() {
-  const [flightType, setFlightType] = useState<"one-way" | "return">("one-way");
+  const [flightType, setFlightType] = useState<"one-way" | "return-flights">(
+    "one-way"
+  );
   const [outboundDate, setOutboundDate] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
   const [message, setMessage] = useState<string>("");
 
   function handleFlightTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
     switch (event.target.value) {
-      case "return":
-        setFlightType("return");
+      case "return-flights":
+        setFlightType("return-flights");
         return;
       case "one-way":
         setFlightType("one-way");
@@ -35,10 +37,19 @@ export function FlightBooker() {
   }
 
   function handleBook() {
-    const message = `You have booked a ${flightType} flight on ${outboundDate} ${
-      flightType === "return" ? `and ${returnDate}` : ""
-    } `;
-    setMessage(message);
+    const outboundDateString = dateToString(parseDate(outboundDate));
+    if (flightType === "one-way" && outboundDateString) {
+      setMessage(
+        `You have booked a ${flightType} flight on ${outboundDateString}`
+      );
+      return;
+    }
+    const returnDateString = dateToString(parseDate(returnDate));
+    if (flightType === "return-flights" && returnDateString) {
+      setMessage(
+        `You have booked a outbound flight on ${outboundDateString} and return flight on ${returnDateString}`
+      );
+    }
   }
 
   return (
@@ -49,13 +60,17 @@ export function FlightBooker() {
         id="flightType"
         onChange={handleFlightTypeChange}
       >
-        <option value="one-way">one-way-flight</option>
-        <option value="return">return flight</option>
+        <option aria-label="one way flight" value="one-way">
+          one-way-flight
+        </option>
+        <option aria-label="return flights" value="return-flights">
+          return flights
+        </option>
       </select>
       <input
         type="text"
-        aria-label="outboundDate date"
-        placeholder="DD.MM.YYYY"
+        aria-label="outbound date"
+        placeholder="DD/MM/YYYY"
         className={` m-2 rounded border  border-black ${
           isDateValid(!outboundDate ? "" : parseDate(outboundDate))
             ? ""
@@ -67,32 +82,33 @@ export function FlightBooker() {
       <input
         type="text"
         aria-label="return date"
-        placeholder="DD.MM.YYYY"
+        placeholder="DD/MM/YYYY"
         className={` m-2 rounded border  border-black disabled:bg-slate-200  disabled:text-slate-400 ${
           isDateValid(!returnDate ? "" : parseDate(returnDate))
             ? ""
             : "bg-red-500"
         }`}
-        value={flightType === "return" ? returnDate : outboundDate}
+        value={flightType === "return-flights" ? returnDate : outboundDate}
         disabled={isReturnInputDisable(flightType)}
         onChange={(e) => setReturnDate(e.target.value)}
       />
       <button
         type="submit"
         className="flex-auto m-2 w-20 bg-blue-300 text-gray-700 disabled:text-slate-400"
+        aria-label="book the flight"
         disabled={isButtonDisabled(outboundDate, returnDate)}
         onClick={handleBook}
       >
         Book
       </button>
-      <p>{message}</p>
+      <p aria-label="message">{message}</p>
     </div>
   );
 }
 
-function isReturnInputDisable(input: "one-way" | "return"): boolean {
+function isReturnInputDisable(input: "one-way" | "return-flights"): boolean {
   switch (input) {
-    case "return":
+    case "return-flights":
       return false;
     case "one-way":
       return true;
@@ -101,12 +117,13 @@ function isReturnInputDisable(input: "one-way" | "return"): boolean {
   }
 }
 
-function isButtonDisabled(outboundDate: string, returnDate: string): boolean {
+export function isButtonDisabled(
+  outboundDate: string,
+  returnDate: string
+): boolean {
   const parsedOutboundDate = parseDate(outboundDate);
   const parsedReturnDate = parseDate(returnDate);
   return (
-    outboundDate === "" ||
-    returnDate === "" ||
     !isDateValid(parsedOutboundDate) ||
     !isDateValid(parsedReturnDate) ||
     parsedOutboundDate === null ||
@@ -115,11 +132,10 @@ function isButtonDisabled(outboundDate: string, returnDate: string): boolean {
   );
 }
 
-function isDateValid(input: "" | Date | null): boolean {
+export function isDateValid(input: "" | Date | null): boolean {
   switch (input) {
     case "":
       return true;
-      [];
     case null:
       return false;
     default:
@@ -129,11 +145,11 @@ function isDateValid(input: "" | Date | null): boolean {
 }
 
 export function parseDate(input: string): Date | null {
-  const regex = /^\d{1,2}\.\d{1,2}\.\d{4}$/;
+  const regex = /^\d{1,2}.\d{1,2}.\d{4}$/;
   if (!regex.test(input)) {
     return null;
   }
-  const match = input.match(/^([\d]*)\.([\d]*)\.([\d]*)/);
+  const match = input.match(/^([\d]*).([\d]*).([\d]*)/);
   if (!match) {
     return null;
   }
@@ -162,4 +178,28 @@ export function isLeapYear(input: number) {
     return false;
   }
   return true;
+}
+
+export function dateToString(date: Date | null) {
+  if (date === null) {
+    return null;
+  }
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sept",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return day + " " + month + " " + year;
 }
