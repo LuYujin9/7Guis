@@ -1,32 +1,13 @@
 import { useState } from "react";
-import { v4 as uuid } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { assertNever } from "../utils/assertNever";
+import { User, UserList } from "../type/types";
 
-type User = {
-  name: string;
-  surname: string;
-  id: string;
-};
 type UserInputs = Omit<User, "id">;
-type UserList<User> = [User, ...User[]];
-
-const initialUserList: UserList<User> = [
-  { name: "Jane", surname: "Davis", id: "0" },
-  { name: "John", surname: "Wilson", id: "1" },
-  { name: "Jack", surname: "Roman", id: "2" },
-  { name: "Isabella", surname: "White", id: "3" },
-  { name: "Jane", surname: "Davis", id: "4" },
-  { name: "John", surname: "Wilson", id: "5" },
-  { name: "Jack", surname: "Roman", id: "6" },
-  { name: "Isabella", surname: "White", id: "7" },
-  { name: "Jane", surname: "Davis", id: "8" },
-  { name: "John", surname: "Wilson", id: "9" },
-  { name: "Jack", surname: "Roman", id: "10" },
-];
-
-export function Crud() {
-  const [userList, setUserList] = useState<UserList<User>>(initialUserList);
+type props = { users: UserList<User> };
+export function Crud({ users }: props) {
+  const [userList, setUserList] = useState<UserList<User>>(users);
   const [filterValue, setFilterValue] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [userInputs, setUserInputs] = useState<UserInputs>({
@@ -42,7 +23,7 @@ export function Crud() {
       setMessage("Please give a name");
       return;
     }
-    const id = uuid();
+    const id = uuidv4();
     const newName = {
       name: userInputs.name,
       surname: userInputs.surname,
@@ -56,7 +37,7 @@ export function Crud() {
 
   function handleUpdate(selectedId: string | undefined) {
     if (!selectedId) {
-      setMessage("Please choose a name");
+      setMessage("Please select a name");
       return;
     }
     if (!userInputs.name && !userInputs.surname) {
@@ -82,7 +63,7 @@ export function Crud() {
     resetState("selectedId");
     resetState("userInputs");
     resetState("filterValue");
-    setMessage("The name is deleted");
+    setMessage("The user is deleted");
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -152,6 +133,7 @@ export function Crud() {
             filteredUserList!.find((user) => user.id === e.target.value)!
           );
         }}
+        aria-label="user list box"
         value={selectedId}
       >
         {filteredUserList.map((user) => {
@@ -173,9 +155,9 @@ export function Crud() {
         />
       </div>
       <div>
-        <Button label="Create" onClick={() => handleCreate()} />
-        <Button label="Update" onClick={() => handleUpdate(selectedId)} />
-        <Button label="Delete" onClick={() => handleDelete(selectedId)} />
+        <Button name="Create" onClick={() => handleCreate()} />
+        <Button name="Update" onClick={() => handleUpdate(selectedId)} />
+        <Button name="Delete" onClick={() => handleDelete(selectedId)} />
       </div>
       <p>{message}</p>
     </div>
@@ -189,7 +171,7 @@ export function filterUserList(input: string, list: User[]) {
   );
 }
 
-function UserOption({ user }: { user: User }) {
+export function UserOption({ user }: { user: User }) {
   return (
     <option className="text-left pl-2" value={user.id}>
       {user.name}, {user.surname}
@@ -197,13 +179,20 @@ function UserOption({ user }: { user: User }) {
   );
 }
 
-function Button({ label, onClick }: { label: string; onClick: () => void }) {
+export function Button({
+  name,
+  onClick,
+}: {
+  name: string;
+  onClick: () => void;
+}) {
   return (
     <button
+      aria-label={name}
       className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
       onClick={onClick}
     >
-      {label}
+      {name}
     </button>
   );
 }
