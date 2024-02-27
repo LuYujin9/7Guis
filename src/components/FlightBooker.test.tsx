@@ -29,7 +29,6 @@ describe("FlightBooker component", () => {
       "You have booked a one-way flight on 30 Dec 2024"
     );
   });
-
   it("should create a booking message for outbound and return flights with correct date", () => {
     render(<FlightBooker />);
     const outboundDateInput = screen.getByLabelText("outbound date");
@@ -68,13 +67,11 @@ describe("parseDate", () => {
     const expectDate = new Date("2023-3-2");
     expect(date).toStrictEqual(expectDate);
   });
-
   it("should return the correct date, when there is not a '0' before day and month", () => {
     const date = parseDate("2/3/2023");
     const expectDate = new Date("2023-3-2");
     expect(date).toStrictEqual(expectDate);
   });
-
   it("should return null, when the input is not a date", () => {
     expect(parseDate("222/32/2023")).toBeNull();
     expect(parseDate("22 023")).toBeNull();
@@ -84,7 +81,6 @@ describe("parseDate", () => {
     expect(parseDate("12/0/2024")).toBeNull();
     expect(parseDate("0/0/2024")).toBeNull();
   });
-
   it("should return null, when a day does not exist in some months", () => {
     expect(parseDate("29/02/2001")).toBeNull();
     expect(parseDate("31/4/2024")).toBeNull();
