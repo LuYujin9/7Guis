@@ -1,8 +1,8 @@
 import { expect, describe, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Units } from "../type/types";
 import { TemperatureConverter } from "./TemperatureConverter";
 import userEvent from "@testing-library/user-event";
+import { Units } from "../pages/TemperatureConverterPage";
 
 const user = userEvent.setup();
 

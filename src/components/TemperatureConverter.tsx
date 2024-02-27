@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TemperatureInput } from "./TemperatureInput";
-import { Units } from "../type/types";
+import { Units } from "../pages/TemperatureConverterPage";
 
 type Temperature = number | "";
 

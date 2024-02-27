@@ -1,6 +1,12 @@
 import { NavLink } from "react-router-dom";
 import { TemperatureConverter } from "../components/TemperatureConverter";
-import { Units } from "../type/types";
+
+export type Unit = {
+  name: string;
+  toCelsius: (arg0: number) => number;
+  fromCelsius: (arg0: number) => number;
+};
+export type Units = Unit[] & { 0: Unit };
 
 const units = [
   {

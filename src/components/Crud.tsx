@@ -2,7 +2,7 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { assertNever } from "../utils/assertNever";
-import { User, UserList } from "../type/types";
+import { User, UserList } from "../pages/CrudPage";
 
 type UserInputs = Omit<User, "id">;
 type props = { users: UserList<User> };

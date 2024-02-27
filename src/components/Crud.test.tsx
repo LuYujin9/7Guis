@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { Button, Crud, UserOption, filterUserList } from "./Crud";
 import { describe, expect, it, test, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { User, UserList } from "../type/types";
+import { User, UserList } from "../pages/CrudPage";
 
 const user = userEvent.setup();
 
