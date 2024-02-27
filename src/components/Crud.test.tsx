@@ -69,7 +69,7 @@ describe("Curd component", () => {
     await user.selectOptions(listBox, "1");
     expect(userList).toHaveLength(4);
     expect(listBox).toHaveValue("1");
-    // Q1: console.log(nameInput);
+    Q1: console.log(nameInput);
     expect(nameInput).toHaveValue("John");
     expect(surnameInput).toHaveValue("Wilson");
     await user.selectOptions(listBox, "2");

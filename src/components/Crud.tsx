@@ -117,50 +117,59 @@ export function Crud({ users }: props) {
   }
 
   return (
-    <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5  md:bg-green-100 lg:w-4/5  lg:bg-red-100">
-      <TextInput
-        children="Filter prefix:"
-        name="filter"
-        value={filterValue}
-        onChange={handleFilterChange}
-      />
-      <select
-        className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
-        size={10}
-        onChange={(e) => {
-          setSelectedId(e.target.value);
-          setUserInputs(
-            filteredUserList!.find((user) => user.id === e.target.value)!
-          );
-        }}
-        aria-label="user list box"
-        value={selectedId}
-      >
-        {filteredUserList.map((user) => {
-          return <UserOption key={user.id} user={user} />;
-        })}
-      </select>
-      <div>
-        <TextInput
-          children="Name:"
-          name="name"
-          value={userInputs?.name ?? ""}
-          onChange={handleUserInputsChange}
-        />
-        <TextInput
-          children="Surname:"
-          name="surname"
-          value={userInputs?.surname ?? ""}
-          onChange={handleUserInputsChange}
-        />
-      </div>
-      <div>
-        <Button name="Create" onClick={() => handleCreate()} />
-        <Button name="Update" onClick={() => handleUpdate(selectedId)} />
-        <Button name="Delete" onClick={() => handleDelete(selectedId)} />
+    <>
+      <div className="grid grid-flow-row content-between w-[600px] h-[617px] rounded-[10px] m-auto p-7 bg-[#CDD3CE] ">
+        <div>
+          <TextInput
+            children="Filter::"
+            name="filter"
+            value={filterValue}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <div className="flex flex-row justify-between gap-4 text-sm">
+          <select
+            className="w-[261px] h-[397px] border-2 rounded-[5px]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400"
+            size={15}
+            onChange={(e) => {
+              setSelectedId(e.target.value);
+              setUserInputs(
+                filteredUserList!.find((user) => user.id === e.target.value)!
+              );
+            }}
+            aria-label="user list box"
+            value={selectedId}
+          >
+            {filteredUserList.map((user) => {
+              return <UserOption key={user.id} user={user} />;
+            })}
+          </select>
+          <div className="flex flex-col content-start gap-3">
+            <TextInput
+              children="Name:"
+              name="name"
+              value={userInputs?.name ?? ""}
+              onChange={handleUserInputsChange}
+            />
+            <TextInput
+              children="Surname:"
+              name="surname"
+              value={userInputs?.surname ?? ""}
+              onChange={handleUserInputsChange}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button name="Create" onClick={() => handleCreate()} />
+          <Button name="Update" onClick={() => handleUpdate(selectedId)} />
+          <DeleteButton
+            name="Delete"
+            onClick={() => handleDelete(selectedId)}
+          />
+        </div>
       </div>
       <p>{message}</p>
-    </div>
+    </>
   );
 }
 
@@ -189,7 +198,27 @@ export function Button({
   return (
     <button
       aria-label={name}
-      className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
+      className="flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400
+       text-gray-700 hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
+      onClick={onClick}
+    >
+      {name}
+    </button>
+  );
+}
+
+export function DeleteButton({
+  name,
+  onClick,
+}: {
+  name: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-label={name}
+      className="flex-auto h-12 border-2 rounded-[5px] bg-[#F27372]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400
+       text-gray-700 hover:bg-[#FE9191] focus:bg-[#FEACAC]"
       onClick={onClick}
     >
       {name}

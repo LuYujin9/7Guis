@@ -7,15 +7,16 @@ type Props = {
 
 export function TextInput({ children, name, value, onChange }: Props) {
   return (
-    <label>
-      {children}
+    <div className="text-left text-sm">
+      <label htmlFor={name}>{children}</label>
       <input
-        className="m-2 w-20 rounded border border-black"
+        className="w-full h-8 rounded-[5px] border-2 shadow-[5px_5px_4px_0px] shadow-gray-400 border-black "
         type="text"
+        id={name}
         name={name}
         value={value}
         onChange={onChange}
       />
-    </label>
+    </div>
   );
 }
