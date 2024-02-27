@@ -18,6 +18,7 @@ export function TemperatureInput({
           isValueInvalid ? "bg-red-500" : ""
         }`}
         type="text"
+        aria-label={`${name} input`}
         name={name}
         value={value}
         onChange={onChange}
