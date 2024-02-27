@@ -2,10 +2,10 @@ import "./App.css";
 import { CounterPage } from "./pages/CounterPage.tsx";
 import { Routes, Route } from "react-router-dom";
 import { Homepage } from "./pages/Homepage.tsx";
-import { TemperatureConverterPage } from "./pages/TemperatureConverterPage.tsx";
-import { CrudPage } from "./pages/CrudPage.tsx";
 import { TimerPage } from "./pages/TimerPage.tsx";
+import { TemperatureConverterPage } from "./pages/TemperatureConverterPage.tsx";
 import { FlightBookerPage } from "./pages/FlightBookerPage.tsx";
+import { CrudPage } from "./pages/CrudPage.tsx";
 
 function App() {
   return (
