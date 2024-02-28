@@ -4,8 +4,6 @@ import { TemperatureConverter } from "./TemperatureConverter";
 import userEvent from "@testing-library/user-event";
 import { Units } from "../pages/TemperatureConverterPage";
 
-const user = userEvent.setup();
-
 describe("TemperatureConverter component", () => {
   const units = [
     {
@@ -76,27 +74,27 @@ describe("TemperatureConverter component", () => {
     const fahrenheitInput =
       screen.getByLabelText<HTMLInputElement>("fahrenheit input");
     const kelvinInput = screen.getByLabelText<HTMLInputElement>("kelvin input");
-    await user.type(celsiusInput, "0");
+    await userEvent.type(celsiusInput, "0");
     expect(fahrenheitInput).toHaveValue("32");
     expect(kelvinInput).toHaveValue("273.15");
-    await user.clear(celsiusInput);
-    await user.type(celsiusInput, "-10.5");
+    await userEvent.clear(celsiusInput);
+    await userEvent.type(celsiusInput, "-10.5");
     expect.soft(fahrenheitInput).toHaveValue("13.1");
     expect(kelvinInput).toHaveValue("262.65");
-    await user.clear(celsiusInput);
-    await user.type(celsiusInput, "200");
+    await userEvent.clear(celsiusInput);
+    await userEvent.type(celsiusInput, "200");
     expect(fahrenheitInput).toHaveValue("392");
     expect(kelvinInput).toHaveValue("473.15");
-    await user.clear(fahrenheitInput);
-    await user.type(fahrenheitInput, "0");
+    await userEvent.clear(fahrenheitInput);
+    await userEvent.type(fahrenheitInput, "0");
     expect(celsiusInput).toHaveValue("-17.78");
     expect(kelvinInput).toHaveValue("255.37");
-    await user.clear(fahrenheitInput);
-    await user.type(fahrenheitInput, "-10.5");
+    await userEvent.clear(fahrenheitInput);
+    await userEvent.type(fahrenheitInput, "-10.5");
     expect(celsiusInput).toHaveValue("-23.61");
     expect(kelvinInput).toHaveValue("249.54");
-    await user.clear(fahrenheitInput);
-    await user.type(fahrenheitInput, "200");
+    await userEvent.clear(fahrenheitInput);
+    await userEvent.type(fahrenheitInput, "200");
     expect(celsiusInput).toHaveValue("93.33");
     expect(kelvinInput).toHaveValue("366.48");
   });
@@ -107,27 +105,27 @@ describe("TemperatureConverter component", () => {
     const fahrenheitInput =
       screen.getByLabelText<HTMLInputElement>("fahrenheit input");
     const kelvinInput = screen.getByLabelText<HTMLInputElement>("kelvin input");
-    await user.type(celsiusInput, "5");
+    await userEvent.type(celsiusInput, "5");
     expect(celsiusInput).toHaveValue("5");
     expect(fahrenheitInput).toHaveValue("41");
     expect(kelvinInput).toHaveValue("278.15");
-    await user.type(celsiusInput, ".");
+    await userEvent.type(celsiusInput, ".");
     expect(celsiusInput).toHaveValue("5.");
     expect(fahrenheitInput).toHaveValue("41");
     expect(kelvinInput).toHaveValue("278.15");
-    await user.type(celsiusInput, "5");
+    await userEvent.type(celsiusInput, "5");
     expect(celsiusInput).toHaveValue("5.5");
     expect(fahrenheitInput).toHaveValue("41.9");
     expect(kelvinInput).toHaveValue("278.65");
-    await user.type(celsiusInput, "sasda");
+    await userEvent.type(celsiusInput, "sasda");
     expect(celsiusInput).toHaveValue("5.5sasda");
     expect(fahrenheitInput).toHaveValue("41.9");
     expect(kelvinInput).toHaveValue("278.65");
-    await user.type(fahrenheitInput, "5");
+    await userEvent.type(fahrenheitInput, "5");
     expect(celsiusInput).toHaveValue("5.53");
     expect(fahrenheitInput).toHaveValue("41.95");
     expect(kelvinInput).toHaveValue("278.68");
-    await user.type(fahrenheitInput, ".aa");
+    await userEvent.type(fahrenheitInput, ".aa");
     expect(celsiusInput).toHaveValue("5.53");
     expect(fahrenheitInput).toHaveValue("41.95.aa");
     expect(kelvinInput).toHaveValue("278.68");
@@ -139,13 +137,13 @@ describe("TemperatureConverter component", () => {
     const fahrenheitInput =
       screen.getByLabelText<HTMLInputElement>("fahrenheit input");
     const kelvinInput = screen.getByLabelText<HTMLInputElement>("kelvin input");
-    await user.type(celsiusInput, "-273.16");
+    await userEvent.type(celsiusInput, "-273.16");
     expect(celsiusInput).toHaveClass("bg-red-500");
-    await user.clear(celsiusInput);
-    await user.type(fahrenheitInput, "-459.69");
+    await userEvent.clear(celsiusInput);
+    await userEvent.type(fahrenheitInput, "-459.69");
     expect(fahrenheitInput).toHaveClass("bg-red-500");
-    await user.clear(fahrenheitInput);
-    await user.type(kelvinInput, "-0.01");
+    await userEvent.clear(fahrenheitInput);
+    await userEvent.type(kelvinInput, "-0.01");
     expect(kelvinInput).toHaveClass("bg-red-500");
     expect(screen.getByText("The value is invalid")).toBeInTheDocument();
   });

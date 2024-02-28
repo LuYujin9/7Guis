@@ -31,7 +31,7 @@ export function FlightBooker() {
       return;
     }
     setOutboundDate(event.target.value);
-    if (isReturnInputDisable(flightType)) {
+    if (!isReturnInputEnabled(flightType)) {
       setReturnDate(event.target.value);
     }
   }
@@ -54,68 +54,97 @@ export function FlightBooker() {
 
   return (
     <div>
-      <select
-        className="border border-black"
-        name="flightType"
-        id="flightType"
-        onChange={handleFlightTypeChange}
-      >
-        <option aria-label="one way flight" value="one-way">
-          one-way-flight
-        </option>
-        <option aria-label="return flights" value="return-flights">
-          return flights
-        </option>
-      </select>
-      <input
-        type="text"
-        aria-label="outbound date"
-        placeholder="DD/MM/YYYY"
-        className={` m-2 rounded border  border-black ${
-          isDateValid(!outboundDate ? "" : parseDate(outboundDate))
-            ? ""
-            : "bg-red-500"
-        }`}
-        value={outboundDate}
-        onChange={handleOutboundDateChange}
-      />
-      <input
-        type="text"
-        aria-label="return date"
-        placeholder="DD/MM/YYYY"
-        className={` m-2 rounded border  border-black disabled:bg-slate-200  disabled:text-slate-400 ${
-          isDateValid(!returnDate ? "" : parseDate(returnDate))
-            ? ""
-            : "bg-red-500"
-        }`}
-        value={flightType === "return-flights" ? returnDate : outboundDate}
-        disabled={isReturnInputDisable(flightType)}
-        onChange={(e) => setReturnDate(e.target.value)}
-      />
-      <button
-        type="submit"
-        className="flex-auto m-2 w-20 bg-blue-300 text-gray-700 disabled:text-slate-400"
-        aria-label="book the flight"
-        disabled={isButtonDisabled(outboundDate, returnDate)}
-        onClick={handleBook}
-      >
-        Book
-      </button>
-      <p aria-label="message">{message}</p>
+      <div className="grid grid-flow-row content-between w-[600px] h-[400px] rounded-[10px] m-auto p-7 bg-[#CDD3CE]">
+        <select
+          className="border border-black"
+          name="flightType"
+          id="flightType"
+          onChange={handleFlightTypeChange}
+        >
+          <option aria-label="one way flight" value="one-way">
+            one-way-flight
+          </option>
+          <option aria-label="return flights" value="return-flights">
+            return flights
+          </option>
+        </select>
+        <div className="">
+          <label>
+            Outbound flight:
+            <input
+              type="text"
+              aria-label="outbound date"
+              placeholder="DD/MM/YYYY"
+              className={` m-2 rounded border  border-black ${
+                isDateValid(!outboundDate ? "" : parseDate(outboundDate))
+                  ? ""
+                  : "bg-red-500"
+              }`}
+              value={outboundDate}
+              onChange={handleOutboundDateChange}
+            />
+          </label>
+          <div
+            className={`text-red-600 text-xs ${
+              !isDateValid(!outboundDate ? "" : parseDate(outboundDate))
+                ? "visible"
+                : "invisible"
+            }`}
+          >
+            The date is invalid. The format is DD/MM/YY and should be later than
+            today.
+          </div>
+        </div>
+        <div>
+          <label>
+            Return flight:
+            <input
+              type="text"
+              aria-label="return date"
+              placeholder="DD/MM/YYYY"
+              className={`m-2 rounded border  border-black disabled:bg-slate-200  disabled:text-slate-400 ${
+                isDateValid(!returnDate ? "" : parseDate(returnDate))
+                  ? ""
+                  : "bg-red-500"
+              }`}
+              value={
+                flightType === "return-flights" ? returnDate : outboundDate
+              }
+              disabled={!isReturnInputEnabled(flightType)}
+              onChange={(e) => setReturnDate(e.target.value)}
+            />
+          </label>
+          <div
+            className={`text-red-600 text-xs ${
+              isReturnInputEnabled(flightType) &&
+              !isDateValid(!returnDate ? "" : parseDate(returnDate))
+                ? "visible"
+                : "invisible"
+            }`}
+          >
+            The date is invalid. The format is DD/MM/YY and should not be
+            earlier than outbound flight.
+          </div>
+        </div>
+        <button
+          type="submit"
+          className="flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px]
+        shadow-gray-400 text-gray-700 disabled:text-slate-400 hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
+          aria-label="book the flight"
+          disabled={isButtonDisabled(outboundDate, returnDate)}
+          onClick={handleBook}
+        >
+          Book
+        </button>
+      </div>
+      <div aria-label="message">{message}</div>
     </div>
   );
 }
 
-function isReturnInputDisable(input: "one-way" | "return-flights"): boolean {
-  switch (input) {
-    case "return-flights":
-      return false;
-    case "one-way":
-      return true;
-    default:
-      assertNever(input);
-  }
-}
+function isReturnInputEnabled(input: "one-way" | "return-flights"): boolean {
+  return input === "return-flights";
+} //确保其他情况都不会enable
 
 export function isButtonDisabled(
   outboundDate: string,
@@ -145,11 +174,7 @@ export function isDateValid(input: "" | Date | null): boolean {
 }
 
 export function parseDate(input: string): Date | null {
-  const regex = /^\d{1,2}.\d{1,2}.\d{4}$/;
-  if (!regex.test(input)) {
-    return null;
-  }
-  const match = input.match(/^([\d]*).([\d]*).([\d]*)/);
+  const match = input.match(/^(\d{1,2}).(\d{1,2}).(\d{4})/);
   if (!match) {
     return null;
   }

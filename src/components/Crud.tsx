@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
-import { assertNever } from "../utils/assertNever";
-import { User, UserList } from "../pages/CrudPage";
 
+export type User = {
+  name: string;
+  surname: string;
+  id: string;
+};
 type UserInputs = Omit<User, "id">;
-type props = { users: UserList<User> };
+type props = { users: User[] };
 export function Crud({ users }: props) {
-  const [userList, setUserList] = useState<UserList<User>>(users);
+  const [userList, setUserList] = useState<User[]>(users);
   const [filterValue, setFilterValue] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [userInputs, setUserInputs] = useState<UserInputs>({
@@ -19,10 +22,6 @@ export function Crud({ users }: props) {
   const filteredUserList = filterUserList(filterValue, userList);
 
   function handleCreate() {
-    if (!userInputs.name || !userInputs.surname) {
-      setMessage("Please give a name");
-      return;
-    }
     const id = uuidv4();
     const newName = {
       name: userInputs.name,
@@ -31,88 +30,46 @@ export function Crud({ users }: props) {
     };
     setUserList([...userList, newName]);
     setSelectedId(id);
-    resetState("filterValue");
-    setMessage("The name is created");
+    setFilterValue("");
+    setMessage(`The user ${userInputs.name}, ${userInputs.surname} is created`);
   }
 
   function handleUpdate(selectedId: string | undefined) {
-    if (!selectedId) {
-      setMessage("Please select a name");
-      return;
-    }
-    if (!userInputs.name && !userInputs.surname) {
-      setMessage("Please give a name");
-      return;
-    }
     if (selectedId && (userInputs.name || userInputs.surname)) {
-      const oldUserToUpdate = userList.find((user) => user.id === selectedId)!;
-      oldUserToUpdate.name = userInputs.name;
-      oldUserToUpdate.surname = userInputs.surname;
-      resetState("filterValue");
-      setMessage("The name is updated");
+      const updatedUserList = users.map((user) =>
+        user.id !== selectedId
+          ? user
+          : { ...user, name: userInputs.name, surname: userInputs.surname }
+      );
+      setUserList(updatedUserList);
+      setFilterValue("");
+      setMessage(
+        `The user ${userInputs.name}, ${userInputs.surname} is updated`
+      );
     }
   }
 
   function handleDelete(selectedId: string | undefined) {
-    if (!selectedId) {
-      setMessage("Please select a name");
-      return;
-    }
-    const indexToDelete = userList.findIndex((user) => user.id === selectedId);
-    if (indexToDelete !== -1) userList.splice(indexToDelete, 1);
-    resetState("selectedId");
-    resetState("userInputs");
-    resetState("filterValue");
+    const updatedUserList = users.filter((user) => user.id !== selectedId);
+    setUserList(updatedUserList);
+    setFilterValue("");
+    setSelectedId(undefined);
+    setUserInputs({
+      name: "",
+      surname: "",
+    });
     setMessage("The user is deleted");
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFilterValue(e.target.value);
-    const isSelectedIdInFilteredUserList = filterUserList(
-      e.target.value,
-      userList
-    ).some((user) => user.id === selectedId);
-    if (!isSelectedIdInFilteredUserList) {
-      resetState("selectedId");
-      resetState("userInputs");
-    }
-  }
-
-  function handleUserInputsChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    const inputName = event.target.name;
-    switch (inputName) {
-      case "name":
-        setUserInputs({
-          name: value,
-          surname: userInputs?.surname ?? "",
-        });
-        return;
-      case "surname":
-        setUserInputs({
-          name: userInputs?.name ?? "",
-          surname: value,
-        });
-        return;
-    }
-  }
-
-  function resetState(stateName: "userInputs" | "filterValue" | "selectedId") {
-    switch (stateName) {
-      case "userInputs":
-        setUserInputs({
-          name: "",
-          surname: "",
-        });
-        return;
-      case "filterValue":
-        setFilterValue("");
-        return;
-      case "selectedId":
-        setSelectedId(undefined);
-        return;
-      default:
-        assertNever(stateName);
+    const user = userList.find((user) => user.id === selectedId);
+    if (user && !isUserFiltered(e.target.value, user)) {
+      setSelectedId(undefined);
+      setUserInputs({
+        name: "",
+        surname: "",
+      });
     }
   }
 
@@ -121,7 +78,7 @@ export function Crud({ users }: props) {
       <div className="grid grid-flow-row content-between w-[600px] h-[617px] rounded-[10px] m-auto p-7 bg-[#CDD3CE] ">
         <div>
           <TextInput
-            children="Filter::"
+            children="Filter:"
             name="filter"
             value={filterValue}
             onChange={handleFilterChange}
@@ -149,22 +106,39 @@ export function Crud({ users }: props) {
               children="Name:"
               name="name"
               value={userInputs?.name ?? ""}
-              onChange={handleUserInputsChange}
+              onChange={(e) =>
+                setUserInputs({ ...userInputs, name: e.target.value })
+              }
             />
             <TextInput
               children="Surname:"
               name="surname"
               value={userInputs?.surname ?? ""}
-              onChange={handleUserInputsChange}
+              onChange={(e) =>
+                setUserInputs({ ...userInputs, surname: e.target.value })
+              }
             />
           </div>
         </div>
         <div className="flex gap-2">
-          <Button name="Create" onClick={() => handleCreate()} />
-          <Button name="Update" onClick={() => handleUpdate(selectedId)} />
-          <DeleteButton
+          <Button
+            name="Create"
+            isDisabled={!userInputs.name && !userInputs.surname}
+            onClick={() => handleCreate()}
+          />
+          <Button
+            name="Update"
+            isDisabled={
+              selectedId === undefined ||
+              (!userInputs.name && !userInputs.surname)
+            }
+            onClick={() => handleUpdate(selectedId)}
+          />
+          <Button
+            isDeleteButton={true}
             name="Delete"
             onClick={() => handleDelete(selectedId)}
+            isDisabled={selectedId === undefined}
           />
         </div>
       </div>
@@ -173,11 +147,12 @@ export function Crud({ users }: props) {
   );
 }
 
+function isUserFiltered(input: string, user: User) {
+  return user?.surname.toLowerCase().startsWith(input.toLowerCase());
+}
+
 export function filterUserList(input: string, list: User[]) {
-  const filterValue = input.toLowerCase();
-  return list.filter((name) =>
-    name.surname.toLowerCase().startsWith(filterValue)
-  );
+  return list.filter((user) => isUserFiltered(input, user));
 }
 
 export function UserOption({ user }: { user: User }) {
@@ -191,35 +166,25 @@ export function UserOption({ user }: { user: User }) {
 export function Button({
   name,
   onClick,
+  isDisabled,
+  isDeleteButton,
 }: {
   name: string;
   onClick: () => void;
+  isDisabled: boolean;
+  isDeleteButton?: boolean;
 }) {
   return (
     <button
       aria-label={name}
-      className="flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400
-       text-gray-700 hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
+      className={`flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px]
+       shadow-gray-400 text-gray-700 disabled:text-slate-400 ${
+         isDeleteButton
+           ? "hover:bg-[#FE9191] focus:bg-[#FEACAC]"
+           : "hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
+       }`}
       onClick={onClick}
-    >
-      {name}
-    </button>
-  );
-}
-
-export function DeleteButton({
-  name,
-  onClick,
-}: {
-  name: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-label={name}
-      className="flex-auto h-12 border-2 rounded-[5px] bg-[#F27372]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400
-       text-gray-700 hover:bg-[#FE9191] focus:bg-[#FEACAC]"
-      onClick={onClick}
+      disabled={isDisabled}
     >
       {name}
     </button>

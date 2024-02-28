@@ -51,7 +51,7 @@ describe("FlightBooker component", () => {
 });
 
 describe("parseDate", () => {
-  it("should return the correct date", () => {
+  it("should parse the correct date", () => {
     expect(parseDate("28/2/2023")).toStrictEqual(new Date("2023-2-28"));
     expect(parseDate("29/2/2000")).toStrictEqual(new Date("2000-2-29"));
     expect(parseDate("31/1/2023")).toStrictEqual(new Date("2023-1-31"));
@@ -61,16 +61,13 @@ describe("parseDate", () => {
     expect(parseDate("31/10/2023")).toStrictEqual(new Date("2023-10-31"));
     expect(parseDate("31/12/2023")).toStrictEqual(new Date("2023-12-31"));
   });
-
-  it("should return the correct date, when there is a '0' before day and month", () => {
-    const date = parseDate("02/03/2023");
-    const expectDate = new Date("2023-3-2");
-    expect(date).toStrictEqual(expectDate);
+  it("should parse the correct date, when there is a '0' before day and month", () => {
+    expect(parseDate("02/03/2023")).toStrictEqual(new Date("2023-3-2"));
+    expect(parseDate("02/12/2023")).toStrictEqual(new Date("2023-12-2"));
   });
-  it("should return the correct date, when there is not a '0' before day and month", () => {
-    const date = parseDate("2/3/2023");
-    const expectDate = new Date("2023-3-2");
-    expect(date).toStrictEqual(expectDate);
+  it("should parse the correct date, when there is not a '0' before day and month", () => {
+    expect(parseDate("2/3/2023")).toStrictEqual(new Date("2023-3-2"));
+    expect(parseDate("30/10/2023")).toStrictEqual(new Date("2023-10-30"));
   });
   it("should return null, when the input is not a date", () => {
     expect(parseDate("222/32/2023")).toBeNull();
@@ -88,13 +85,31 @@ describe("parseDate", () => {
     expect(parseDate("31/9/2024")).toBeNull();
     expect(parseDate("31/11/2024")).toBeNull();
   });
+  it("should parse the correct date, when 28/2 is in every year", () => {
+    expect(parseDate("28/2/2020")).toStrictEqual(new Date("2020-2-28"));
+    expect(parseDate("28/2/3004")).toStrictEqual(new Date("3004-2-28"));
+    expect(parseDate("28/2/2024")).toStrictEqual(new Date("2024-2-28"));
+    expect(parseDate("28/2/2021")).toStrictEqual(new Date("2021-2-28"));
+    expect(parseDate("28/2/3000")).toStrictEqual(new Date("3000-2-28"));
+    expect(parseDate("28/2/2023")).toStrictEqual(new Date("2023-2-28"));
+  });
+  it("should parse the correct date, when 29/2 is in leap year", () => {
+    expect(parseDate("29/2/2020")).toStrictEqual(new Date("2020-2-29"));
+    expect(parseDate("29/2/3004")).toStrictEqual(new Date("3004-2-29"));
+    expect(parseDate("29/2/2024")).toStrictEqual(new Date("2024-2-29"));
+  });
+  it("should return null, when 29/2 is not in leap year", () => {
+    expect(parseDate("29/2/2021")).toBeNull();
+    expect(parseDate("29/2/3000")).toBeNull();
+    expect(parseDate("29/2/2023")).toBeNull();
+  });
 });
 
 test("isLeapYear return the correct value", () => {
-  expect(isLeapYear(1996)).toBeTruthy();
-  expect(isLeapYear(1995)).not.toBeTruthy();
-  expect(isLeapYear(2000)).toBeTruthy();
-  expect(isLeapYear(1900)).not.toBeTruthy();
+  expect(isLeapYear(1996)).toBe(true);
+  expect(isLeapYear(1995)).toBe(false);
+  expect(isLeapYear(2000)).toBe(true);
+  expect(isLeapYear(1900)).toBe(false);
 });
 
 describe("isButtonDisabled function", () => {
@@ -102,21 +117,21 @@ describe("isButtonDisabled function", () => {
   vi.useFakeTimers();
   vi.setSystemTime(currentDate);
   it("should return true if either outboundDate or returnDate is empty", () => {
-    expect(isButtonDisabled("", "12/12/2024")).toBeTruthy();
-    expect(isButtonDisabled("12/12/2024", "")).toBeTruthy();
+    expect(isButtonDisabled("", "12/12/2024")).toBe(true);
+    expect(isButtonDisabled("12/12/2024", "")).toBe(true);
   });
   it("should return true if either outboundDate or returnDate is not a date", () => {
-    expect(isButtonDisabled("11/50/23", "12/12/2024")).toBeTruthy();
-    expect(isButtonDisabled("12/12/2024", "11/50/23")).toBeTruthy();
+    expect(isButtonDisabled("11/50/23", "12/12/2024")).toBe(true);
+    expect(isButtonDisabled("12/12/2024", "11/50/23")).toBe(true);
   });
   it("should return true if outboundDate is after returnDate", () => {
-    expect(isButtonDisabled("12/12/2024", "1/12/2024")).toBeTruthy();
+    expect(isButtonDisabled("12/12/2024", "1/12/2024")).toBe(true);
   });
   it("should return false if both dates are valid and outboundDate is before returnDate", () => {
-    expect(isButtonDisabled("12/12/2024", "30/12/2024")).not.toBeTruthy();
+    expect(isButtonDisabled("12/12/2024", "30/12/2024")).toBe(false);
   });
   it("should return true if both dates are valid and outboundDate is the same as returnDate", () => {
-    expect(isButtonDisabled("30/10/2038", "30/10/2038")).not.toBeTruthy();
+    expect(isButtonDisabled("30/10/2038", "30/10/2038")).toBe(false);
   });
 });
 
@@ -125,19 +140,19 @@ describe("isDateValid function", () => {
   vi.useFakeTimers();
   vi.setSystemTime(currentDate);
   it("should return true if input is empty string", () => {
-    expect(isDateValid("")).toBeTruthy();
+    expect(isDateValid("")).toBe(true);
   });
   it("should return true if input is later after the current date", () => {
-    expect(isDateValid(new Date("2024-2-21"))).toBeTruthy();
+    expect(isDateValid(new Date("2024-2-21"))).toBe(true);
   });
   it("should return false if input is the same as the current date", () => {
-    expect(isDateValid(new Date("2024-2-20"))).not.toBeTruthy();
+    expect(isDateValid(new Date("2024-2-20"))).toBe(false);
   });
   it("should return false if input is before the current date", () => {
-    expect(isDateValid(new Date("2024-2-19"))).not.toBeTruthy();
+    expect(isDateValid(new Date("2024-2-19"))).toBe(false);
   });
   it("should return false if input is null", () => {
-    expect(isDateValid(null)).not.toBeTruthy();
+    expect(isDateValid(null)).toBe(false);
   });
 });
 
