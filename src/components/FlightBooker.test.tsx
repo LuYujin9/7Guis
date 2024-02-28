@@ -6,6 +6,7 @@ import {
   isDateValid,
   dateToString,
   FlightBooker,
+  DateState,
 } from "./FlightBooker";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
@@ -14,6 +15,22 @@ import { act } from "react-dom/test-utils";
 // const user = userEvent.setup();
 // await user.type(outboundDateInput, "30/12/2024");
 // await user.click(button);
+
+// test("hasReturnDate should return true when there is key returnDate", () => {
+//   expect(
+//     hasReturnDate({
+//       flightType: "return-flights",
+//       outboundDate: "12/12/2024",
+//       returnDate: "11/50/23",
+//     })
+//   ).toBe(true);
+//   expect(
+//     hasReturnDate({
+//       flightType: "one-way-flight",
+//       outboundDate: "12/12/2024",
+//     })
+//   ).toBe(false);
+// });
 
 describe("FlightBooker component", () => {
   it("should create booking message for the one-way flight with correct date", async () => {
@@ -26,7 +43,7 @@ describe("FlightBooker component", () => {
     const button = screen.getByLabelText("book the flight");
     act(() => button.click());
     expect(screen.getByLabelText("message")).toHaveTextContent(
-      "You have booked a one-way flight on 30 Dec 2024"
+      "You have booked an one way flight on 30 Dec 2024"
     );
   });
   it("should create a booking message for outbound and return flights with correct date", () => {
@@ -45,7 +62,7 @@ describe("FlightBooker component", () => {
     const button = screen.getByLabelText("book the flight");
     act(() => button.click());
     expect(screen.getByLabelText("message")).toHaveTextContent(
-      "You have booked a outbound flight on 18 Dec 2024 and return flight on 30 Dec 2024"
+      "You have booked an outbound flight on 18 Dec 2024 and a return flight on 30 Dec 2024"
     );
   });
 });
@@ -75,6 +92,7 @@ describe("parseDate", () => {
     expect(parseDate("-12/20")).toBeNull();
     expect(parseDate("32/12/2024")).toBeNull();
     expect(parseDate("12/13/2024")).toBeNull();
+    expect(parseDate("12/12/20241")).toBeNull();
     expect(parseDate("12/0/2024")).toBeNull();
     expect(parseDate("0/0/2024")).toBeNull();
   });
@@ -117,21 +135,67 @@ describe("isButtonDisabled function", () => {
   vi.useFakeTimers();
   vi.setSystemTime(currentDate);
   it("should return true if either outboundDate or returnDate is empty", () => {
-    expect(isButtonDisabled("", "12/12/2024")).toBe(true);
-    expect(isButtonDisabled("12/12/2024", "")).toBe(true);
+    //  const state:DateState= {
+    //     flightType: "one-way-flight",
+    //     outboundDate: ""
+    //   }
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "",
+        returnDate: "12/12/2024",
+      })
+    ).toBe(true);
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "12/12/2024",
+        returnDate: "",
+      })
+    ).toBe(true);
   });
   it("should return true if either outboundDate or returnDate is not a date", () => {
-    expect(isButtonDisabled("11/50/23", "12/12/2024")).toBe(true);
-    expect(isButtonDisabled("12/12/2024", "11/50/23")).toBe(true);
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "11/50/23",
+        returnDate: "12/12/2024",
+      })
+    ).toBe(true);
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "12/12/2024",
+        returnDate: "11/50/23",
+      })
+    ).toBe(true);
   });
   it("should return true if outboundDate is after returnDate", () => {
-    expect(isButtonDisabled("12/12/2024", "1/12/2024")).toBe(true);
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "12/12/2024",
+        returnDate: "1/12/2024",
+      })
+    ).toBe(true);
   });
   it("should return false if both dates are valid and outboundDate is before returnDate", () => {
-    expect(isButtonDisabled("12/12/2024", "30/12/2024")).toBe(false);
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "12/12/2024",
+        returnDate: "30/12/2024",
+      })
+    ).toBe(false);
   });
   it("should return true if both dates are valid and outboundDate is the same as returnDate", () => {
-    expect(isButtonDisabled("30/10/2038", "30/10/2038")).toBe(false);
+    expect(
+      isButtonDisabled({
+        flightType: "return-flights",
+        outboundDate: "30/10/2038",
+        returnDate: "30/10/2038",
+      })
+    ).toBe(false);
   });
 });
 
