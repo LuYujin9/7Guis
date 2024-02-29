@@ -12,6 +12,15 @@ export function FlightBooker() {
   });
   const [message, setMessage] = useState<string>("");
 
+  const parsedOutboundDate = dateState.outboundDate
+    ? parseDate(dateState.outboundDate)
+    : undefined;
+
+  const parsedReturnDate =
+    dateState.flightType === "return-flights" && dateState.returnDate !== ""
+      ? parseDate(dateState.returnDate)
+      : undefined;
+
   function handleFlightTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
     switch (event.target.value) {
       case "one-way-flight":
@@ -33,17 +42,25 @@ export function FlightBooker() {
   }
 
   function handleBook() {
-    const outboundDateString = dateToString(parseDate(dateState.outboundDate));
+    const outboundDateString = dateToString(parsedOutboundDate ?? null);
     if (dateState.flightType === "one-way-flight") {
       setMessage(`You have booked an one way flight on ${outboundDateString}`);
       return;
     }
     if (dateState.flightType === "return-flights") {
-      const returnDateString = dateToString(parseDate(dateState.returnDate));
+      const returnDateString = dateToString(parsedReturnDate ?? null);
       setMessage(
         `You have booked an outbound flight on ${outboundDateString} and a return flight on ${returnDateString}`
       );
     }
+  }
+
+  function isReturnDateValid() {
+    return (
+      (isDateValid(parsedReturnDate) || parsedReturnDate === undefined) &&
+      (!isDateBefore(parsedOutboundDate, parsedReturnDate) ||
+        dateState.flightType === "one-way-flight")
+    );
   }
 
   return (
@@ -71,7 +88,7 @@ export function FlightBooker() {
               placeholder="DD/MM/YYYY"
               className={` m-2 rounded border  border-black ${
                 dateState.outboundDate &&
-                !isDateValid(parseDate(dateState.outboundDate)) &&
+                !isDateValid(parsedOutboundDate) &&
                 "bg-red-500"
               }`}
               value={dateState.outboundDate}
@@ -85,11 +102,7 @@ export function FlightBooker() {
           </label>
           <div
             className={`text-red-600 text-xs ${
-              !isDateValid(
-                !dateState.outboundDate ? "" : parseDate(dateState.outboundDate)
-              )
-                ? "visible"
-                : "invisible"
+              isDateValid(parsedOutboundDate) && "invisible"
             }`}
           >
             The date is invalid. The format is DD/MM/YY and the date should be
@@ -104,10 +117,7 @@ export function FlightBooker() {
               aria-label="return date"
               placeholder="DD/MM/YYYY"
               className={`m-2 rounded border  border-black disabled:bg-slate-200  disabled:text-slate-400 ${
-                dateState.flightType === "return-flights" &&
-                dateState.returnDate &&
-                !isDateValid(parseDate(dateState.returnDate)) &&
-                "bg-red-500"
+                !isReturnDateValid() && "bg-red-500"
               }`}
               value={
                 dateState.flightType === "return-flights"
@@ -124,27 +134,25 @@ export function FlightBooker() {
               }}
             />
           </label>
-          {/* <div
+          <div
             className={`text-red-600 text-xs ${
-              dateState.flightType === "return-flights" &&
-              isDateValid(parseDate(dateState.returnDate)) &&
-              !isReturnDateAfterOutboundDate(
-                dateState.outboundDate,
-                dateState.returnDate
-              ) &&
-              "invisible"
+              isReturnDateValid() && "invisible"
             }`}
           >
             The date is invalid. The format is DD/MM/YY and the Date should not
             be earlier than outbound flight.
-          </div> */}
+          </div>
         </div>
         <button
           type="submit"
           className="flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px]
         shadow-gray-400 text-gray-700 disabled:text-slate-400 hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
           aria-label="book the flight"
-          disabled={isButtonDisabled(dateState)}
+          disabled={isButtonDisabled(
+            dateState.flightType,
+            parsedOutboundDate,
+            parsedReturnDate
+          )}
           onClick={handleBook}
         >
           Book
@@ -155,47 +163,43 @@ export function FlightBooker() {
   );
 }
 
-export function isButtonDisabled(state: DateState): boolean {
-  const parsedOutboundDate = parseDate(state.outboundDate);
-  if (state.flightType === "one-way-flight") {
-    return !isDateValid(parsedOutboundDate);
+export function isButtonDisabled(
+  flightType: "one-way-flight" | "return-flights",
+  parsedOutboundDate: Date | null | undefined,
+  parsedReturnDate: Date | null | undefined
+): boolean {
+  if (flightType === "one-way-flight") {
+    return parsedOutboundDate === undefined
+      ? true
+      : !isDateValid(parsedOutboundDate);
   }
-  const parsedReturnDate = parseDate(state.returnDate);
   return (
     !isDateValid(parsedOutboundDate) ||
     !isDateValid(parsedReturnDate) ||
-    parsedOutboundDate === null ||
-    parsedReturnDate === null ||
-    parsedOutboundDate.getTime() > parsedReturnDate.getTime()
+    isDateBefore(parsedOutboundDate, parsedReturnDate)
   );
 }
 
-// function isReturnDateAfterOutboundDate(
-//   outboundDate: string,
-//   returnDate: string
-// ) {
-//   if (!returnDate) {
-//     return true;
-//   }
-//   const parsedOutboundDate = parseDate(outboundDate);
-//   const parsedReturnDate = parseDate(returnDate);
-
-//   if (parsedOutboundDate && parsedReturnDate) {
-//     return parsedOutboundDate.getTime() < parsedReturnDate.getTime();
-//   }
-//   return false;
-// }
-
-export function isDateValid(input: "" | Date | null): boolean {
+export function isDateValid(input: undefined | Date | null): boolean {
   switch (input) {
-    case "":
+    case undefined:
       return true;
     case null:
       return false;
     default:
-      const currentDateNumber = new Date().getTime();
-      return input.getTime() > currentDateNumber;
+      const currentDateNumber = new Date();
+      return isDateBefore(input, currentDateNumber);
   }
+}
+
+export function isDateBefore(
+  dateOne: Date | null | undefined,
+  dateTwo: Date | null | undefined
+) {
+  if (dateOne && dateTwo) {
+    return dateOne.getTime() > dateTwo.getTime();
+  }
+  return true;
 }
 
 export function parseDate(input: string): Date | null {
