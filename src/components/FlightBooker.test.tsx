@@ -19,7 +19,7 @@ describe("FlightBooker component", () => {
     act(() =>
       fireEvent.change(outboundDateInput, { target: { value: "30/12/2024" } })
     );
-    const button = screen.getByLabelText("book the flight");
+    const button = screen.getByRole("button");
     act(() => button.click());
     expect(screen.getByLabelText("message")).toHaveTextContent(
       "You have booked an one way flight on 30 Dec 2024"
@@ -38,7 +38,7 @@ describe("FlightBooker component", () => {
       fireEvent.change(outboundDateInput, { target: { value: "18/12/2024" } });
       fireEvent.change(returnDateInput, { target: { value: "30/12/2024" } });
     });
-    const button = screen.getByLabelText("book the flight");
+    const button = screen.getByRole("button");
     act(() => button.click());
     expect(screen.getByLabelText("message")).toHaveTextContent(
       "You have booked an outbound flight on 18 Dec 2024 and a return flight on 30 Dec 2024"

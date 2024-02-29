@@ -176,7 +176,6 @@ export function Button({
 }) {
   return (
     <button
-      aria-label={name}
       className={`flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px]
        shadow-gray-400 text-gray-700 disabled:text-slate-400 ${
          isDeleteButton

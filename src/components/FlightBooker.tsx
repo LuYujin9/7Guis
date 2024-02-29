@@ -147,7 +147,6 @@ export function FlightBooker() {
           type="submit"
           className="flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px]
         shadow-gray-400 text-gray-700 disabled:text-slate-400 hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
-          aria-label="book the flight"
           disabled={isButtonDisabled(
             dateState.flightType,
             parsedOutboundDate,

@@ -33,6 +33,7 @@ describe("Timer component", () => {
     const paragraph = screen.getByLabelText("Paragraph to show the duration");
     expect(paragraph).toHaveTextContent("6s");
   });
+
   it("should stop the timer after elapsed time greater as duration", async () => {
     render(<Timer />);
     vi.useFakeTimers();

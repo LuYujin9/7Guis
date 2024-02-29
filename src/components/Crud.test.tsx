@@ -85,7 +85,7 @@ describe("Crud component", () => {
 
   it("should render disabled Create button, when user inputs are empty", async () => {
     render(<Crud users={users} />);
-    const createButton = screen.getByLabelText(/create/i);
+    const createButton = screen.getByText(/create/i);
     const nameInput = screen.getByLabelText("Name:");
     const surnameInput = screen.getByLabelText("Surname:");
     expect(createButton).toHaveAttribute("disabled");
@@ -98,7 +98,7 @@ describe("Crud component", () => {
   });
   it("should render disabled Update button, when user inputs are empty or an user is not selected", async () => {
     render(<Crud users={users} />);
-    const updateButton = screen.getByLabelText(/update/i);
+    const updateButton = screen.getByText(/update/i);
     const listBox = screen.getByLabelText<HTMLSelectElement>("user list box");
     const nameInput = screen.getByLabelText("Name:");
     const surnameInput = screen.getByLabelText("Surname:");
@@ -113,7 +113,7 @@ describe("Crud component", () => {
   });
   it("should render disabled Delete button, when a user is not selected", () => {
     render(<Crud users={users} />);
-    const deleteButton = screen.getByLabelText(/delete/i);
+    const deleteButton = screen.getByText(/delete/i);
     expect(deleteButton).toHaveAttribute("disabled");
   });
   it("should correctly filter the user list based on a case-insensitive filter", async () => {
@@ -185,7 +185,7 @@ describe("Crud component", () => {
     const nameInput = screen.getByLabelText("Name:");
     const surnameInput = screen.getByLabelText("Surname:");
     const filterInput = screen.getByLabelText("Filter:");
-    const createButton = screen.getByLabelText(/create/i);
+    const createButton = screen.getByText(/create/i);
     await userEvent.type(filterInput, "wI");
     expect(screen.getAllByRole("option")).toHaveLength(1);
     await userEvent.type(nameInput, "Bella");
@@ -207,7 +207,7 @@ describe("Crud component", () => {
     const nameInput = screen.getByLabelText("Name:");
     const surnameInput = screen.getByLabelText("Surname:");
     const filterInput = screen.getByLabelText("Filter:");
-    const updateButton = screen.getByLabelText(/update/i);
+    const updateButton = screen.getByText(/update/i);
     await userEvent.type(filterInput, "wI");
     expect(screen.getAllByRole("option")).toHaveLength(1);
     await userEvent.selectOptions(listBox, "1");
@@ -229,7 +229,7 @@ describe("Crud component", () => {
   it("should update the user list, when a user is deleted", async () => {
     render(<Crud users={users} />);
     const listBox = screen.getByLabelText<HTMLSelectElement>("user list box");
-    const deleteButton = screen.getByLabelText(/delete/i);
+    const deleteButton = screen.getByText(/delete/i);
     await userEvent.selectOptions(listBox, "2");
     await userEvent.click(deleteButton);
     expect(screen.getAllByRole("option")).toHaveLength(3);
