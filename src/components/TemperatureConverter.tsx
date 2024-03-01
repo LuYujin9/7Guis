@@ -6,7 +6,7 @@ type Temperature = number | "";
 
 export function TemperatureConverter({ units }: { units: Units }) {
   const [celsius, setCelsius] = useState<Temperature>("");
-  const [focusedInput, setFocusedInput] = useState<{
+  const [lastChangedInput, setLastChangedInput] = useState<{
     name: string;
     value: string;
   } | null>(null);
@@ -23,8 +23,8 @@ export function TemperatureConverter({ units }: { units: Units }) {
   }
 
   function calculateInputDisplayValue(name: string): string {
-    if (focusedInput?.name === name) {
-      return focusedInput.value;
+    if (lastChangedInput?.name === name) {
+      return lastChangedInput.value;
     }
     return celsius === ""
       ? ""
@@ -39,7 +39,7 @@ export function TemperatureConverter({ units }: { units: Units }) {
     e: React.ChangeEvent<HTMLInputElement>
   ) {
     const input = e.target.value;
-    setFocusedInput({
+    setLastChangedInput({
       name: e.target.name,
       value: input,
     });

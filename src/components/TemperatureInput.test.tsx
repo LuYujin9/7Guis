@@ -1,10 +1,15 @@
-import { expect, describe, it, vi } from "vitest";
+import { expect, describe, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import userEvent, { UserEvent } from "@testing-library/user-event";
 import { TemperatureInput } from "./TemperatureInput";
 
 describe("TemperatureInput component", () => {
-  const mockHandleChange = vi.fn();
+  let mockHandleChange: () => void;
+  let user: UserEvent;
+  beforeEach(() => {
+    mockHandleChange = vi.fn();
+    user = userEvent.setup();
+  });
   it("should called the onChange function when the input value changes", async () => {
     render(
       <TemperatureInput
@@ -14,10 +19,10 @@ describe("TemperatureInput component", () => {
         isValueInvalid={false}
       />
     );
-    const input = screen.getByLabelText<HTMLInputElement>("celsius input");
-    await userEvent.type(input, "2");
+    const input = screen.getByLabelText("celsius input");
+    await user.type(input, "2");
     expect(mockHandleChange).toBeCalledTimes(1);
-    await userEvent.type(input, "0");
+    await user.type(input, "0");
     expect(mockHandleChange).toBeCalledTimes(2);
   });
   it("should change the background color to red when the  isValueInvalid ist true", async () => {
