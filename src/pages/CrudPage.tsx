@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { Crud, User, UserList } from "../components/Crud";
+import { Crud, User } from "../components/Crud";
 
-const initialUsers: UserList<User> = [
+const initialUsers: User[] = [
   { name: "Jane", surname: "Davis", id: "0" },
   { name: "John", surname: "Wilson", id: "1" },
   { name: "Jack", surname: "Roman", id: "2" },
