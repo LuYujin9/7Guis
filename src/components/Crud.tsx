@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
+import { DynamicButton } from "./DynamicButton";
 
 export type User = {
   name: string;
@@ -18,7 +19,6 @@ export function Crud({ users }: props) {
     surname: "",
   });
   const [message, setMessage] = useState<string>("");
-
   const filteredUserList = filterUserList(filterValue, userList);
 
   function handleCreate() {
@@ -73,9 +73,24 @@ export function Crud({ users }: props) {
     }
   }
 
+  function handleSelectChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSelectedId(event.target.value);
+    const selectedUser = filteredUserList!.find(
+      (user) => user.id === event.target.value
+    );
+    setUserInputs({
+      name: selectedUser!.name,
+      surname: selectedUser!.surname,
+    });
+    //Q1 possible to find out this bug with test?
+    // setUserInputs(
+    //   filteredUserList!.find((user) => user.id === event.target.value)!
+    // );
+  }
+
   return (
     <>
-      <div className="grid grid-flow-row content-between w-[600px] h-[617px] rounded-[10px] m-auto p-7 bg-[#CDD3CE] ">
+      <div className="grid grid-flow-row content-between w-[650px] h-[700px] rounded-[10px] m-auto p-7 bg-[#CDD3CE] ">
         <div>
           <TextInput
             children="Filter:"
@@ -88,12 +103,7 @@ export function Crud({ users }: props) {
           <select
             className="w-[261px] h-[397px] border-2 rounded-[5px]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400"
             size={15}
-            onChange={(e) => {
-              setSelectedId(e.target.value);
-              setUserInputs(
-                filteredUserList!.find((user) => user.id === e.target.value)!
-              );
-            }}
+            onChange={(e) => handleSelectChange(e)}
             aria-label="user list box"
             value={selectedId}
           >
@@ -121,12 +131,12 @@ export function Crud({ users }: props) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button
+          <DynamicButton
             name="Create"
             isDisabled={!userInputs.name && !userInputs.surname}
             onClick={() => handleCreate()}
           />
-          <Button
+          <DynamicButton
             name="Update"
             isDisabled={
               selectedId === undefined ||
@@ -134,7 +144,7 @@ export function Crud({ users }: props) {
             }
             onClick={() => handleUpdate(selectedId)}
           />
-          <Button
+          <DynamicButton
             isDeleteButton={true}
             name="Delete"
             onClick={() => handleDelete(selectedId)}
@@ -160,32 +170,5 @@ export function UserOption({ user }: { user: User }) {
     <option className="text-left pl-2" value={user.id}>
       {user.name}, {user.surname}
     </option>
-  );
-}
-
-export function Button({
-  name,
-  onClick,
-  isDisabled,
-  isDeleteButton,
-}: {
-  name: string;
-  onClick: () => void;
-  isDisabled: boolean;
-  isDeleteButton?: boolean;
-}) {
-  return (
-    <button
-      className={`flex-auto h-12 border-2 rounded-[5px] bg-[#F5F5F5]  border-black shadow-[5px_5px_4px_0px]
-       shadow-gray-400 text-gray-700 disabled:text-slate-400 ${
-         isDeleteButton
-           ? "hover:bg-[#FE9191] focus:bg-[#FEACAC]"
-           : "hover:bg-[#DDE5DE] focus:bg-[#C7DAC9]"
-       }`}
-      onClick={onClick}
-      disabled={isDisabled}
-    >
-      {name}
-    </button>
   );
 }
