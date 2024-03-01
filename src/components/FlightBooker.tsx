@@ -3,7 +3,6 @@ import { useState } from "react";
 export type DateState =
   | { flightType: "one-way-flight"; outboundDate: string }
   | { flightType: "return-flights"; outboundDate: string; returnDate: string };
-// export type DateState = { flightType: "one-way-flight"| "return-flights"; outboundDate: string; returnDate?: string };
 
 export function FlightBooker() {
   const [dateState, setDateState] = useState<DateState>({
@@ -11,7 +10,6 @@ export function FlightBooker() {
     outboundDate: "",
   });
   const [message, setMessage] = useState<string>("");
-
   const parsedOutboundDate = dateState.outboundDate
     ? parseDate(dateState.outboundDate)
     : undefined;
@@ -57,7 +55,8 @@ export function FlightBooker() {
 
   function isReturnDateValid() {
     return (
-      (isDateValid(parsedReturnDate) || parsedReturnDate === undefined) &&
+      (isDateValid(parsedReturnDate, new Date()) ||
+        parsedReturnDate === undefined) &&
       (!isDateBefore(parsedOutboundDate, parsedReturnDate) ||
         dateState.flightType === "one-way-flight")
     );
@@ -88,7 +87,7 @@ export function FlightBooker() {
               placeholder="DD/MM/YYYY"
               className={` m-2 rounded border  border-black ${
                 dateState.outboundDate &&
-                !isDateValid(parsedOutboundDate) &&
+                !isDateValid(parsedOutboundDate, new Date()) &&
                 "bg-red-500"
               }`}
               value={dateState.outboundDate}
@@ -102,7 +101,7 @@ export function FlightBooker() {
           </label>
           <div
             className={`text-red-600 text-xs ${
-              isDateValid(parsedOutboundDate) && "invisible"
+              isDateValid(parsedOutboundDate, new Date()) && "invisible"
             }`}
           >
             The date is invalid. The format is DD/MM/YY and the date should be
@@ -150,7 +149,8 @@ export function FlightBooker() {
           disabled={isButtonDisabled(
             dateState.flightType,
             parsedOutboundDate,
-            parsedReturnDate
+            parsedReturnDate,
+            new Date()
           )}
           onClick={handleBook}
         >
@@ -165,38 +165,41 @@ export function FlightBooker() {
 export function isButtonDisabled(
   flightType: "one-way-flight" | "return-flights",
   parsedOutboundDate: Date | null | undefined,
-  parsedReturnDate: Date | null | undefined
+  parsedReturnDate: Date | null | undefined,
+  currentDate: Date
 ): boolean {
   if (flightType === "one-way-flight") {
     return parsedOutboundDate === undefined
       ? true
-      : !isDateValid(parsedOutboundDate);
+      : !isDateValid(parsedOutboundDate, currentDate);
   }
   return (
-    !isDateValid(parsedOutboundDate) ||
-    !isDateValid(parsedReturnDate) ||
+    !isDateValid(parsedOutboundDate, currentDate) ||
+    !isDateValid(parsedReturnDate, currentDate) ||
     isDateBefore(parsedOutboundDate, parsedReturnDate)
   );
 }
 
-export function isDateValid(input: undefined | Date | null): boolean {
-  switch (input) {
+export function isDateValid(
+  date: undefined | Date | null,
+  currentDate: Date
+): boolean {
+  switch (date) {
     case undefined:
       return true;
     case null:
       return false;
     default:
-      const currentDateNumber = new Date();
-      return isDateBefore(input, currentDateNumber);
+      return isDateBefore(date, currentDate);
   }
 }
 
 export function isDateBefore(
-  dateOne: Date | null | undefined,
-  dateTwo: Date | null | undefined
+  dateToCompare: Date | null | undefined,
+  referenceDate: Date | null | undefined
 ) {
-  if (dateOne && dateTwo) {
-    return dateOne.getTime() > dateTwo.getTime();
+  if (dateToCompare && referenceDate) {
+    return dateToCompare.getTime() > referenceDate.getTime();
   }
   return true;
 }
@@ -206,31 +209,18 @@ export function parseDate(input: string): Date | null {
   if (!match) {
     return null;
   }
-  const lunarMonth = [4, 6, 9, 11];
   const year = Number(match[3]);
   const month = Number(match[2]);
   const day = Number(match[1]);
-  if (month < 1 || month > 12 || day < 1 || day > 31) {
+  if (month > 12 || month < 1) {
     return null;
   }
-  if (month === 2 && isLeapYear(year) && day > 29) {
-    return null;
+  const daysInTheMonth = new Date(year, month, 0).getDate();
+  if (day <= daysInTheMonth && day > 0) {
+    const parsed = new Date(year, month - 1, day);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
-  if (month === 2 && !isLeapYear(year) && day > 28) {
-    return null;
-  }
-  if (lunarMonth.includes(month) && day > 30) {
-    return null;
-  }
-  const formatDate = year + "-" + month + "-" + day;
-  return new Date(formatDate);
-}
-
-export function isLeapYear(input: number) {
-  if ((input % 100 === 0 && input % 400 !== 0) || input % 4 !== 0) {
-    return false;
-  }
-  return true;
+  return null;
 }
 
 export function dateToString(date: Date | null) {

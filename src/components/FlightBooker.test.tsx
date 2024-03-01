@@ -1,45 +1,44 @@
-import { describe, expect, it, test, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   isButtonDisabled,
-  isLeapYear,
   parseDate,
   isDateValid,
   dateToString,
   FlightBooker,
   isDateBefore,
 } from "./FlightBooker";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { act } from "react-dom/test-utils";
+import { render, screen } from "@testing-library/react";
+import userEvent, { UserEvent } from "@testing-library/user-event";
 
 describe("FlightBooker component", () => {
-  it("should create booking message for the one-way flight with correct date", async () => {
+  let user: UserEvent;
+  let flightTypeSelect: HTMLElement;
+  let outboundDateInput: HTMLElement;
+  let returnDateInput: HTMLElement;
+  beforeEach(() => {
     render(<FlightBooker />);
-    const outboundDateInput = screen.getByLabelText("outbound date");
+    flightTypeSelect = screen.getByRole("combobox");
+    outboundDateInput = screen.getByLabelText("outbound date");
+    returnDateInput = screen.getByLabelText("return date");
+    user = userEvent.setup();
+  });
+  it("should create booking message for the one-way flight with correct date", async () => {
     expect(screen.getByLabelText("message")).toHaveTextContent("");
-    act(() =>
-      fireEvent.change(outboundDateInput, { target: { value: "30/12/2024" } })
-    );
+    await user.type(outboundDateInput, "30/12/2024");
     const button = screen.getByRole("button");
-    act(() => button.click());
+    await user.click(button);
+    expect(outboundDateInput).toHaveValue("30/12/2024");
     expect(screen.getByLabelText("message")).toHaveTextContent(
       "You have booked an one way flight on 30 Dec 2024"
     );
   });
-  it("should create a booking message for outbound and return flights with correct date", () => {
-    render(<FlightBooker />);
-    const outboundDateInput = screen.getByLabelText("outbound date");
-    const returnDateInput = screen.getByLabelText("return date");
-    const flightTypeSelect = screen.getByRole("combobox");
+  it("should create a booking message for outbound and return flights with correct date", async () => {
     expect(screen.getByLabelText("message")).toHaveTextContent("");
-    act(() => {
-      fireEvent.change(flightTypeSelect, {
-        target: { value: "return-flights" },
-      });
-      fireEvent.change(outboundDateInput, { target: { value: "18/12/2024" } });
-      fireEvent.change(returnDateInput, { target: { value: "30/12/2024" } });
-    });
+    await user.selectOptions(flightTypeSelect, "return-flights");
+    await user.type(outboundDateInput, "18/12/2024");
+    await user.type(returnDateInput, "30/12/2024");
     const button = screen.getByRole("button");
-    act(() => button.click());
+    await user.click(button);
     expect(screen.getByLabelText("message")).toHaveTextContent(
       "You have booked an outbound flight on 18 Dec 2024 and a return flight on 30 Dec 2024"
     );
@@ -48,22 +47,24 @@ describe("FlightBooker component", () => {
 
 describe("parseDate", () => {
   it("should parse the correct date", () => {
-    expect(parseDate("28/2/2023")).toStrictEqual(new Date("2023-2-28"));
-    expect(parseDate("29/2/2000")).toStrictEqual(new Date("2000-2-29"));
-    expect(parseDate("31/1/2023")).toStrictEqual(new Date("2023-1-31"));
-    expect(parseDate("31/5/2023")).toStrictEqual(new Date("2023-5-31"));
-    expect(parseDate("31/7/2023")).toStrictEqual(new Date("2023-7-31"));
-    expect(parseDate("31/8/2023")).toStrictEqual(new Date("2023-8-31"));
-    expect(parseDate("31/10/2023")).toStrictEqual(new Date("2023-10-31"));
-    expect(parseDate("31/12/2023")).toStrictEqual(new Date("2023-12-31"));
+    expect(parseDate("28/2/2023")).toStrictEqual(new Date(2023, 1, 28));
+    expect(parseDate("29/2/2000")).toStrictEqual(new Date(2000, 1, 29));
+    expect(parseDate("31/1/2023")).toStrictEqual(new Date(2023, 0, 31));
+    expect(parseDate("31/5/2023")).toStrictEqual(new Date(2023, 4, 31));
+    expect(parseDate("31/7/2023")).toStrictEqual(new Date(2023, 6, 31));
+    expect(parseDate("31/8/2023")).toStrictEqual(new Date(2023, 7, 31));
+    expect(parseDate("31/12/2023")).toStrictEqual(new Date(2023, 11, 31));
+    expect(parseDate("1/10/2023")).toStrictEqual(new Date(2023, 9, 1));
+    expect(parseDate("31/12/2023")).toStrictEqual(new Date(2023, 11, 31));
+    expect(parseDate("31/10/2023")).toStrictEqual(new Date(2023, 9, 31));
   });
   it("should parse the correct date, when there is a '0' before day and month", () => {
-    expect(parseDate("02/03/2023")).toStrictEqual(new Date("2023-3-2"));
-    expect(parseDate("02/12/2023")).toStrictEqual(new Date("2023-12-2"));
+    expect(parseDate("02/03/2023")).toStrictEqual(new Date(2023, 2, 2));
+    expect(parseDate("02/12/2023")).toStrictEqual(new Date(2023, 11, 2));
   });
   it("should parse the correct date, when there is not a '0' before day and month", () => {
-    expect(parseDate("2/3/2023")).toStrictEqual(new Date("2023-3-2"));
-    expect(parseDate("30/10/2023")).toStrictEqual(new Date("2023-10-30"));
+    expect(parseDate("2/3/2023")).toStrictEqual(new Date(2023, 2, 2));
+    expect(parseDate("30/10/2023")).toStrictEqual(new Date(2023, 9, 30));
   });
   it("should return null, when the input is not a date", () => {
     expect(parseDate("222/32/2023")).toBeNull();
@@ -83,17 +84,17 @@ describe("parseDate", () => {
     expect(parseDate("31/11/2024")).toBeNull();
   });
   it("should parse the correct date, when 28/2 is in every year", () => {
-    expect(parseDate("28/2/2020")).toStrictEqual(new Date("2020-2-28"));
-    expect(parseDate("28/2/3004")).toStrictEqual(new Date("3004-2-28"));
-    expect(parseDate("28/2/2024")).toStrictEqual(new Date("2024-2-28"));
-    expect(parseDate("28/2/2021")).toStrictEqual(new Date("2021-2-28"));
-    expect(parseDate("28/2/3000")).toStrictEqual(new Date("3000-2-28"));
-    expect(parseDate("28/2/2023")).toStrictEqual(new Date("2023-2-28"));
+    expect(parseDate("28/2/2020")).toStrictEqual(new Date(2020, 1, 28));
+    expect(parseDate("28/2/3004")).toStrictEqual(new Date(3004, 1, 28));
+    expect(parseDate("28/2/2024")).toStrictEqual(new Date(2024, 1, 28));
+    expect(parseDate("28/2/2021")).toStrictEqual(new Date(2021, 1, 28));
+    expect(parseDate("28/2/3000")).toStrictEqual(new Date(3000, 1, 28));
+    expect(parseDate("28/2/2023")).toStrictEqual(new Date(2023, 1, 28));
   });
   it("should parse the correct date, when 29/2 is in leap year", () => {
-    expect(parseDate("29/2/2020")).toStrictEqual(new Date("2020-2-29"));
-    expect(parseDate("29/2/3004")).toStrictEqual(new Date("3004-2-29"));
-    expect(parseDate("29/2/2024")).toStrictEqual(new Date("2024-2-29"));
+    expect(parseDate("29/2/2020")).toStrictEqual(new Date(2020, 1, 29));
+    expect(parseDate("29/2/3004")).toStrictEqual(new Date(3004, 1, 29));
+    expect(parseDate("29/2/2024")).toStrictEqual(new Date(2024, 1, 29));
   });
   it("should return null, when 29/2 is not in leap year", () => {
     expect(parseDate("29/2/2021")).toBeNull();
@@ -102,45 +103,64 @@ describe("parseDate", () => {
   });
 });
 
-test("isLeapYear return the correct value", () => {
-  expect(isLeapYear(1996)).toBe(true);
-  expect(isLeapYear(1995)).toBe(false);
-  expect(isLeapYear(2000)).toBe(true);
-  expect(isLeapYear(1900)).toBe(false);
-});
-
 describe("isButtonDisabled function", () => {
-  const currentDate = new Date("2024-2-20");
-  vi.useFakeTimers();
-  vi.setSystemTime(currentDate);
+  const mockCurrentDate = new Date(2024, 0, 30);
   it("should return true,if the flight type is 'one-way-flight', parsedReturnDate are undefined and parsedOutboundDate are null or undefined", () => {
-    expect(isButtonDisabled("one-way-flight", null, undefined)).toBe(true);
+    expect(
+      isButtonDisabled("one-way-flight", null, undefined, mockCurrentDate)
+    ).toBe(true);
   });
   it("should return false, if the flight type is 'one-way-flight', parsedReturnDate are undefined and parsedOutboundDate is a valid date", () => {
     expect(
-      isButtonDisabled("one-way-flight", new Date("2024-12-12"), undefined)
+      isButtonDisabled(
+        "one-way-flight",
+        new Date(2024, 11, 12),
+        undefined,
+        mockCurrentDate
+      )
     ).toBe(false);
   });
   it("should return true, if the flight type is 'return-flights' and either parsedOutboundDate or parsedReturnDate are undefined or null", () => {
     expect(
-      isButtonDisabled("return-flights", undefined, new Date("2024-12-12"))
+      isButtonDisabled(
+        "return-flights",
+        undefined,
+        new Date(2024, 11, 12),
+        mockCurrentDate
+      )
     ).toBe(true);
     expect(
-      isButtonDisabled("return-flights", new Date("2024-12-12"), undefined)
+      isButtonDisabled(
+        "return-flights",
+        new Date(2024, 11, 12),
+        undefined,
+        mockCurrentDate
+      )
     ).toBe(true);
     expect(
-      isButtonDisabled("return-flights", null, new Date("2024-12-12"))
+      isButtonDisabled(
+        "return-flights",
+        null,
+        new Date(2024, 11, 12),
+        mockCurrentDate
+      )
     ).toBe(true);
     expect(
-      isButtonDisabled("return-flights", new Date("2024-12-12"), null)
+      isButtonDisabled(
+        "return-flights",
+        new Date(2024, 11, 12),
+        null,
+        mockCurrentDate
+      )
     ).toBe(true);
   });
   it("should return true, if the flight type is 'return-flights' and  parsedOutboundDate is after parsedReturnDate", () => {
     expect(
       isButtonDisabled(
         "return-flights",
-        new Date("2024-12-20"),
-        new Date("2024-12-12")
+        new Date(2024, 11, 20),
+        new Date(2024, 11, 12),
+        mockCurrentDate
       )
     ).toBe(true);
   });
@@ -148,8 +168,9 @@ describe("isButtonDisabled function", () => {
     expect(
       isButtonDisabled(
         "return-flights",
-        new Date("2024-12-12"),
-        new Date("2024-12-12")
+        new Date(2024, 11, 12),
+        new Date(2024, 11, 12),
+        mockCurrentDate
       )
     ).toBe(false);
   });
@@ -157,8 +178,9 @@ describe("isButtonDisabled function", () => {
     expect(
       isButtonDisabled(
         "return-flights",
-        new Date("2024-12-12"),
-        new Date("2024-12-12")
+        new Date(2024, 11, 12),
+        new Date(2024, 11, 12),
+        mockCurrentDate
       )
     ).toBe(false);
   });
@@ -166,47 +188,45 @@ describe("isButtonDisabled function", () => {
 
 describe("isDateBefore function", () => {
   it("should return true, if parsedOutboundDate is after parsedReturnDate", () => {
-    expect(isDateBefore(new Date("2024-12-20"), new Date("2024-12-12"))).toBe(
+    expect(isDateBefore(new Date(2024, 11, 20), new Date(2024, 11, 12))).toBe(
       true
     );
   });
   it("should return false, if parsedOutboundDate is the same day as parsedReturnDate", () => {
-    expect(isDateBefore(new Date("2024-12-12"), new Date("2024-12-12"))).toBe(
+    expect(isDateBefore(new Date(2024, 11, 12), new Date(2024, 11, 12))).toBe(
       false
     );
   });
   it("should return false, if parsedOutboundDate is before day as parsedReturnDate", () => {
-    expect(isDateBefore(new Date("2024-12-11"), new Date("2024-12-12"))).toBe(
+    expect(isDateBefore(new Date(2024, 11, 11), new Date(2024, 11, 12))).toBe(
       false
     );
   });
 });
 
 describe("isDateValid function", () => {
-  const currentDate = new Date("2024-2-20");
-  vi.useFakeTimers();
-  vi.setSystemTime(currentDate);
+  const mockCurrentDate = new Date(2024, 0, 30);
   it("should return true if input is undefined", () => {
-    expect(isDateValid(undefined)).toBe(true);
+    expect(isDateValid(undefined, mockCurrentDate)).toBe(true);
   });
   it("should return true if input is later after the current date", () => {
-    expect(isDateValid(new Date("2024-2-21"))).toBe(true);
+    expect(isDateValid(new Date(2024, 1, 21), mockCurrentDate)).toBe(true);
   });
   it("should return false if input is the same as the current date", () => {
-    expect(isDateValid(new Date("2024-2-20"))).toBe(false);
+    expect(isDateValid(new Date(2024, 0, 30), mockCurrentDate)).toBe(false);
   });
   it("should return false if input is before the current date", () => {
-    expect(isDateValid(new Date("2024-2-19"))).toBe(false);
+    expect(isDateValid(new Date(2024, 0, 19), mockCurrentDate)).toBe(false);
   });
   it("should return false if input is null", () => {
-    expect(isDateValid(null)).toBe(false);
+    expect(isDateValid(null, mockCurrentDate)).toBe(false);
   });
 });
 
 describe("dateToString function", () => {
   it("should convert the date to string, and the format is DD.MM.YYY", () => {
-    expect(dateToString(new Date("2024-12-30"))).toStrictEqual("30 Dec 2024");
-    expect(dateToString(new Date("2024-1-1"))).toStrictEqual("1 Jan 2024");
+    expect(dateToString(new Date(2024, 11, 30))).toStrictEqual("30 Dec 2024");
+    expect(dateToString(new Date(2024, 0, 1))).toStrictEqual("1 Jan 2024");
   });
   it("should return null, when the input date is null ", () => {
     expect(dateToString(null)).toStrictEqual(null);
