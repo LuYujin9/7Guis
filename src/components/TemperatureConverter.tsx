@@ -34,7 +34,7 @@ export function TemperatureConverter({ units }: { units: Units }) {
           .toString();
   }
 
-  function handelInputChange(
+  function handleInputChange(
     name: string,
     e: React.ChangeEvent<HTMLInputElement>
   ) {
@@ -57,7 +57,7 @@ export function TemperatureConverter({ units }: { units: Units }) {
           value={calculateInputDisplayValue(name)}
           isValueInvalid={isValueInvalid(celsius)}
           onChange={(e) => {
-            handelInputChange(name, e);
+            handleInputChange(name, e);
           }}
         />
       ))}
