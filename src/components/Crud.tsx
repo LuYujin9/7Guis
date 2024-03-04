@@ -1,237 +1,174 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { TextInput } from "./TextInput";
+import { DynamicButton } from "./DynamicButton";
 
-type FullName = {
-  frontName: string;
+export type User = {
+  name: string;
   surname: string;
   id: string;
 };
-
-const initialNameList: FullName[] = [
-  { frontName: "Jane", surname: "Davis", id: "0" },
-  { frontName: "John", surname: "Wilson", id: "1" },
-  { frontName: "Tisch", surname: "Roman", id: "2" },
-  { frontName: "Isabella", surname: "White", id: "3" },
-  { frontName: "Jane", surname: "Davis", id: "4" },
-  { frontName: "John", surname: "Wilson", id: "5" },
-  { frontName: "Tisch", surname: "Roman", id: "6" },
-  { frontName: "Isabella", surname: "White", id: "7" },
-  { frontName: "Jane", surname: "Davis", id: "8" },
-  { frontName: "John", surname: "Wilson", id: "9" },
-  { frontName: "Tisch", surname: "Roman", id: "10" },
-  { frontName: "Isabella", surname: "White", id: "11" },
-];
-
-export function Crud() {
-  const [nameList, setNameList] = useState<FullName[]>(initialNameList);
-  const [currentNameList, setCurrentNameList] =
-    useState<FullName[]>(initialNameList);
-  const [filterValue, setfilterValue] = useState<string>("");
-  const [frontName, setFrontName] = useState<string>("");
-  const [surname, setSurname] = useState<string>("");
+type UserInputs = Omit<User, "id">;
+type props = { users: User[] };
+export function Crud({ users }: props) {
+  const [userList, setUserList] = useState<User[]>(users);
+  const [filterValue, setFilterValue] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [userInputs, setUserInputs] = useState<UserInputs>({
+    name: "",
+    surname: "",
+  });
   const [message, setMessage] = useState<string>("");
+  const filteredUserList = filterUserList(filterValue, userList);
 
-  useEffect(() => {
-    setInputValuesBySelectedId(selectedId, currentNameList);
-    // console.log("updated by selectedId");
-  }, [selectedId]);
-
-  // console.log("re-rendered");
-
-  function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
-    if (!event.target.value) {
-      setfilterValue("");
-      setCurrentNameList(nameList);
-      return;
-    }
-    const formatFilterValue = formatAsName(event.target.value);
-    setfilterValue(formatFilterValue);
-    const matchedNames = filterNamesBySurname(formatFilterValue, nameList);
-    setCurrentNameList(matchedNames);
-    setSelectedId(undefined);
-  }
-
-  function handleCreat() {
-    if (isNameInvalid(frontName) || isNameInvalid(surname)) {
-      setMessage("Please give the richt form of name");
-      return;
-    }
+  function handleCreate() {
     const id = uuidv4();
     const newName = {
-      frontName: frontName,
-      surname: surname,
+      name: userInputs.name,
+      surname: userInputs.surname,
       id: id,
     };
-    setNameList([...nameList, newName]);
-    setCurrentNameList([...nameList, newName]);
-    // is there a way to re-render only in one time? is it necessary
-    setfilterValue("");
+    setUserList([...userList, newName]);
     setSelectedId(id);
-    setMessage("The name is created");
+    setFilterValue("");
+    setMessage(`The user ${userInputs.name}, ${userInputs.surname} is created`);
   }
 
   function handleUpdate(selectedId: string | undefined) {
-    if (!selectedId) {
-      setMessage("No name is selected");
-      return;
-    }
-    if (isNameInvalid(frontName) || isNameInvalid(surname)) {
-      setMessage("Please give the richt form of name");
-      return;
-    }
-    if (selectedId && frontName && surname) {
-      const updatedName = {
-        frontName: frontName,
-        surname: surname,
-        id: selectedId,
-      };
-      const updatedNameList = nameList.map((name) => {
-        return name.id === selectedId ? updatedName : name;
-      });
-      setNameList(updatedNameList);
-      setCurrentNameList(updatedNameList);
-      setfilterValue("");
-      setMessage("The name is updated");
+    if (selectedId && (userInputs.name || userInputs.surname)) {
+      const updatedUserList = users.map((user) =>
+        user.id !== selectedId
+          ? user
+          : { ...user, name: userInputs.name, surname: userInputs.surname }
+      );
+      setUserList(updatedUserList);
+      setFilterValue("");
+      setMessage(
+        `The user ${userInputs.name}, ${userInputs.surname} is updated`
+      );
     }
   }
 
   function handleDelete(selectedId: string | undefined) {
-    if (!selectedId) {
-      setMessage("No name selected");
-      return;
-    }
-    const updatedNameList = nameList.filter((name) => name.id !== selectedId);
-    setNameList(updatedNameList);
-    setCurrentNameList(updatedNameList);
+    const updatedUserList = users.filter((user) => user.id !== selectedId);
+    setUserList(updatedUserList);
+    setFilterValue("");
     setSelectedId(undefined);
-    setfilterValue("");
-    setMessage("The name is deleted");
+    setUserInputs({
+      name: "",
+      surname: "",
+    });
+    setMessage("The user is deleted");
   }
 
-  function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
-    setFrontName(formatAsName(event.target.value));
-  }
-
-  function handleChangeSurnameInput(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    setSurname(formatAsName(event.target.value));
-  }
-
-  function handleSelectName(event: React.ChangeEvent<HTMLSelectElement>) {
-    setSelectedId(event.target.value);
-  }
-
-  //name?
-  function setInputValuesBySelectedId(
-    selectedId: string | undefined,
-    nameList: FullName[]
-  ) {
-    const selectedName = findNameById(nameList, selectedId);
-    if (!selectedName) {
-      setFrontName("");
-      setSurname("");
-      return;
+  function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFilterValue(e.target.value);
+    const user = userList.find((user) => user.id === selectedId);
+    if (user && !isUserFiltered(e.target.value, user)) {
+      setSelectedId(undefined);
+      setUserInputs({
+        name: "",
+        surname: "",
+      });
     }
-    setFrontName(selectedName.frontName);
-    setSurname(selectedName.surname);
+  }
+
+  function handleSelectChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSelectedId(event.target.value);
+    const selectedUser = filteredUserList!.find(
+      (user) => user.id === event.target.value
+    );
+    setUserInputs({
+      name: selectedUser!.name,
+      surname: selectedUser!.surname,
+    });
+    //Q1 possible to find out this bug with test?
+    // setUserInputs(
+    //   filteredUserList!.find((user) => user.id === event.target.value)!
+    // );
   }
 
   return (
-    <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5  md:bg-green-100 lg:w-4/5  lg:bg-red-100">
-      <label>
-        Filter prefix:
-        <input
-          className="m-2 w-20 rounded border border-black"
-          type="text"
-          value={filterValue}
-          onChange={handleFilterChange}
-        />
-      </label>
-      <select
-        className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
-        size={10}
-        onChange={handleSelectName}
-        value={selectedId ?? undefined}
-        //didn't re-rendered, when selectedId changed to undefined
-      >
-        {currentNameList.map((fullName) => {
-          return <NameBox key={fullName.id} fullName={fullName} />;
-        })}
-      </select>
-      <div>
-        <label>
-          Name:
-          <input
-            className="m-2 w-20 rounded border border-black"
-            type="text"
-            value={frontName}
-            onChange={handleChangeNameInput}
+    <>
+      <div className="grid grid-flow-row content-between w-[650px] h-[700px] rounded-[10px] m-auto p-7 bg-[#CDD3CE] ">
+        <div>
+          <TextInput
+            children="Filter:"
+            name="filter"
+            value={filterValue}
+            onChange={handleFilterChange}
           />
-        </label>
-        <label>
-          Surname:
-          <input
-            className="m-auto w-20 rounded border border-black"
-            type="text"
-            value={surname}
-            onChange={handleChangeSurnameInput}
+        </div>
+        <div className="flex flex-row justify-between gap-4 text-sm">
+          <select
+            className="w-[261px] h-[397px] border-2 rounded-[5px]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400"
+            size={15}
+            onChange={(e) => handleSelectChange(e)}
+            aria-label="user list box"
+            value={selectedId}
+          >
+            {filteredUserList.map((user) => {
+              return <UserOption key={user.id} user={user} />;
+            })}
+          </select>
+          <div className="flex flex-col content-start gap-3">
+            <TextInput
+              children="Name:"
+              name="name"
+              value={userInputs?.name ?? ""}
+              onChange={(e) =>
+                setUserInputs({ ...userInputs, name: e.target.value })
+              }
+            />
+            <TextInput
+              children="Surname:"
+              name="surname"
+              value={userInputs?.surname ?? ""}
+              onChange={(e) =>
+                setUserInputs({ ...userInputs, surname: e.target.value })
+              }
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <DynamicButton
+            name="Create"
+            isDisabled={!userInputs.name && !userInputs.surname}
+            onClick={() => handleCreate()}
           />
-        </label>
-      </div>
-      <div>
-        <button
-          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleCreat()}
-        >
-          Creat
-        </button>
-        <button
-          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleUpdate(selectedId)}
-        >
-          Update
-        </button>
-        <button
-          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleDelete(selectedId)}
-        >
-          Delete
-        </button>
+          <DynamicButton
+            name="Update"
+            isDisabled={
+              selectedId === undefined ||
+              (!userInputs.name && !userInputs.surname)
+            }
+            onClick={() => handleUpdate(selectedId)}
+          />
+          <DynamicButton
+            isDeleteButton={true}
+            name="Delete"
+            onClick={() => handleDelete(selectedId)}
+            isDisabled={selectedId === undefined}
+          />
+        </div>
       </div>
       <p>{message}</p>
-    </div>
+    </>
   );
 }
 
-function formatAsName(input: string) {
-  if (!input) {
-    return "";
-  }
-  const firstLetter = input[0].toUpperCase();
-  const otherLetters = input.slice(1).toLowerCase();
-  return firstLetter + otherLetters;
+function isUserFiltered(input: string, user: User) {
+  return user?.surname.toLowerCase().startsWith(input.toLowerCase());
 }
 
-function isNameInvalid(input: string) {
-  const regex = /^[a-zA-Z]+$/g;
-  return !regex.test(input);
+export function filterUserList(input: string, list: User[]) {
+  return list.filter((user) => isUserFiltered(input, user));
 }
 
-function filterNamesBySurname(input: string, list: FullName[]): FullName[] {
-  const names = list.filter((name) => name.surname.startsWith(input));
-  return names;
-}
-
-function findNameById(nameList: FullName[], id: string | undefined) {
-  return nameList.find((name) => name.id === id);
-}
-
-function NameBox({ fullName }: { fullName: FullName }) {
+export function UserOption({ user }: { user: User }) {
   return (
-    <option className="text-left pl-2" value={fullName.id}>
-      {fullName.frontName}, {fullName.surname}
+    <option className="text-left pl-2" value={user.id}>
+      {user.name}, {user.surname}
     </option>
   );
 }

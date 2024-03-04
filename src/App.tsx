@@ -1,12 +1,11 @@
 import "./App.css";
-import { CounterPage } from "./pages/counterPage.tsx";
+import { CounterPage } from "./pages/CounterPage.tsx";
 import { Routes, Route } from "react-router-dom";
-import { Homepage } from "./pages/homepage.tsx";
-import { TemperatureConverterPage } from "./pages/temperatureConverterPage.tsx";
-import { CrudPage } from "./pages/crudPage.tsx";
+import { Homepage } from "./pages/Homepage.tsx";
 import { TimerPage } from "./pages/TimerPage.tsx";
-import { FlightBookerPage } from "./pages/flightBookerPage.tsx";
-import { Test } from "./pages/test.tsx";
+import { TemperatureConverterPage } from "./pages/TemperatureConverterPage.tsx";
+import { FlightBookerPage } from "./pages/FlightBookerPage.tsx";
+import { CrudPage } from "./pages/CrudPage.tsx";
 
 function App() {
   return (
@@ -20,7 +19,6 @@ function App() {
       <Route path="timerPage" element={<TimerPage />} />
       <Route path="flightBookerPage" element={<FlightBookerPage />} />
       <Route path="crudPage" element={<CrudPage />} />
-      <Route path="test" element={<Test />} />
     </Routes>
   );
 }
