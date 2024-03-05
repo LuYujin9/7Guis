@@ -10,7 +10,6 @@ export function TemperatureConverter({ units }: { units: Units }) {
     name: string;
     value: string;
   } | null>(null);
-
   const unitNames = units.map((unit) => unit.name);
   const message = isValueInvalid(celsius) ? "The value is invalid" : "";
 

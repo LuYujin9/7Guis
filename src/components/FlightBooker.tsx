@@ -217,7 +217,7 @@ export function parseDate(input: string): Date | null {
   }
   const daysInTheMonth = new Date(year, month, 0).getDate();
   if (day <= daysInTheMonth && day > 0) {
-    const parsed = new Date(year, month - 1, day);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
   return null;
