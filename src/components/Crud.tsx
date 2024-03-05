@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { DynamicButton } from "./DynamicButton";
@@ -8,84 +8,84 @@ export type User = {
   surname: string;
   id: string;
 };
-type UserInputs = Omit<User, "id">;
+type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
 type props = { users: User[] };
 export function Crud({ users }: props) {
   const [userList, setUserList] = useState<User[]>(users);
   const [filterValue, setFilterValue] = useState<string>("");
-  const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [userInputs, setUserInputs] = useState<UserInputs>({
+  const [userInputsAndId, setUserInputsAndId] = useState<UserInputsAndId>({
     name: "",
     surname: "",
+    id: undefined,
   });
   const [message, setMessage] = useState<string>("");
   const filteredUserList = filterUserList(filterValue, userList);
 
   function handleCreate() {
     const id = uuidv4();
-    const newName = {
-      name: userInputs.name,
-      surname: userInputs.surname,
+    const newUser = {
+      name: userInputsAndId.name,
+      surname: userInputsAndId.surname,
       id: id,
     };
-    setUserList([...userList, newName]);
-    setSelectedId(id);
+    setUserList([...userList, newUser]);
+    setUserInputsAndId(newUser);
     setFilterValue("");
-    setMessage(`The user ${userInputs.name}, ${userInputs.surname} is created`);
+    setMessage(
+      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is created`
+    );
   }
 
-  function handleUpdate(selectedId: string | undefined) {
-    if (selectedId && (userInputs.name || userInputs.surname)) {
-      const updatedUserList = users.map((user) =>
-        user.id !== selectedId
+  function handleUpdate() {
+    if (
+      userInputsAndId.id &&
+      (userInputsAndId.name || userInputsAndId.surname)
+    ) {
+      const updatedUserList = userList.map((user) =>
+        user.id !== userInputsAndId.id
           ? user
-          : { ...user, name: userInputs.name, surname: userInputs.surname }
+          : {
+              ...user,
+              name: userInputsAndId.name,
+              surname: userInputsAndId.surname,
+            }
       );
       setUserList(updatedUserList);
       setFilterValue("");
       setMessage(
-        `The user ${userInputs.name}, ${userInputs.surname} is updated`
+        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated`
       );
+      return;
     }
+    throw new Error(
+      `The update didn't go through successfully, the update button should have been disabled.`
+    );
   }
 
-  function handleDelete(selectedId: string | undefined) {
-    const updatedUserList = users.filter((user) => user.id !== selectedId);
+  function handleDelete() {
+    const updatedUserList = userList.filter(
+      (user) => user.id !== userInputsAndId.id
+    );
     setUserList(updatedUserList);
     setFilterValue("");
-    setSelectedId(undefined);
-    setUserInputs({
+    setUserInputsAndId({
       name: "",
       surname: "",
+      id: undefined,
     });
     setMessage("The user is deleted");
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFilterValue(e.target.value);
-    const user = userList.find((user) => user.id === selectedId);
+    const user = userList.find((user) => user.id === userInputsAndId.id);
     if (user && !isUserFiltered(e.target.value, user)) {
-      setSelectedId(undefined);
-      setUserInputs({
+      setUserInputsAndId({
         name: "",
         surname: "",
+        id: undefined,
       });
     }
-  }
-
-  function handleSelectChange(event: ChangeEvent<HTMLSelectElement>) {
-    setSelectedId(event.target.value);
-    const selectedUser = filteredUserList!.find(
-      (user) => user.id === event.target.value
-    );
-    setUserInputs({
-      name: selectedUser!.name,
-      surname: selectedUser!.surname,
-    });
-    //Q1 possible to find out this bug with test?
-    // setUserInputs(
-    //   filteredUserList!.find((user) => user.id === event.target.value)!
-    // );
   }
 
   return (
@@ -103,9 +103,13 @@ export function Crud({ users }: props) {
           <select
             className="w-[261px] h-[397px] border-2 rounded-[5px]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400"
             size={15}
-            onChange={(e) => handleSelectChange(e)}
+            onChange={(e) =>
+              setUserInputsAndId(
+                filteredUserList.find((user) => user.id === e.target.value)!
+              )
+            }
             aria-label="user list box"
-            value={selectedId}
+            value={userInputsAndId.id}
           >
             {filteredUserList.map((user) => {
               return <UserOption key={user.id} user={user} />;
@@ -115,17 +119,20 @@ export function Crud({ users }: props) {
             <TextInput
               children="Name:"
               name="name"
-              value={userInputs?.name ?? ""}
+              value={userInputsAndId?.name ?? ""}
               onChange={(e) =>
-                setUserInputs({ ...userInputs, name: e.target.value })
+                setUserInputsAndId({ ...userInputsAndId, name: e.target.value })
               }
             />
             <TextInput
               children="Surname:"
               name="surname"
-              value={userInputs?.surname ?? ""}
+              value={userInputsAndId?.surname ?? ""}
               onChange={(e) =>
-                setUserInputs({ ...userInputs, surname: e.target.value })
+                setUserInputsAndId({
+                  ...userInputsAndId,
+                  surname: e.target.value,
+                })
               }
             />
           </div>
@@ -133,22 +140,22 @@ export function Crud({ users }: props) {
         <div className="flex gap-2">
           <DynamicButton
             name="Create"
-            isDisabled={!userInputs.name && !userInputs.surname}
-            onClick={() => handleCreate()}
+            isDisabled={!userInputsAndId.name && !userInputsAndId.surname}
+            onClick={handleCreate}
           />
           <DynamicButton
             name="Update"
             isDisabled={
-              selectedId === undefined ||
-              (!userInputs.name && !userInputs.surname)
+              userInputsAndId.id === undefined ||
+              (!userInputsAndId.name && !userInputsAndId.surname)
             }
-            onClick={() => handleUpdate(selectedId)}
+            onClick={handleUpdate}
           />
           <DynamicButton
             isDeleteButton={true}
             name="Delete"
-            onClick={() => handleDelete(selectedId)}
-            isDisabled={selectedId === undefined}
+            onClick={handleDelete}
+            isDisabled={userInputsAndId.id === undefined}
           />
         </div>
       </div>
