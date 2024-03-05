@@ -1,237 +1,181 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { TextInput } from "./TextInput";
+import { DynamicButton } from "./DynamicButton";
 
-type FullName = {
-  frontName: string;
+export type User = {
+  name: string;
   surname: string;
   id: string;
 };
-
-const initialNameList: FullName[] = [
-  { frontName: "Jane", surname: "Davis", id: "0" },
-  { frontName: "John", surname: "Wilson", id: "1" },
-  { frontName: "Tisch", surname: "Roman", id: "2" },
-  { frontName: "Isabella", surname: "White", id: "3" },
-  { frontName: "Jane", surname: "Davis", id: "4" },
-  { frontName: "John", surname: "Wilson", id: "5" },
-  { frontName: "Tisch", surname: "Roman", id: "6" },
-  { frontName: "Isabella", surname: "White", id: "7" },
-  { frontName: "Jane", surname: "Davis", id: "8" },
-  { frontName: "John", surname: "Wilson", id: "9" },
-  { frontName: "Tisch", surname: "Roman", id: "10" },
-  { frontName: "Isabella", surname: "White", id: "11" },
-];
-
-export function Crud() {
-  const [nameList, setNameList] = useState<FullName[]>(initialNameList);
-  const [currentNameList, setCurrentNameList] =
-    useState<FullName[]>(initialNameList);
-  const [filterValue, setfilterValue] = useState<string>("");
-  const [frontName, setFrontName] = useState<string>("");
-  const [surname, setSurname] = useState<string>("");
-  const [selectedId, setSelectedId] = useState<string | undefined>();
+type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
+type props = { users: User[] };
+export function Crud({ users }: props) {
+  const [userList, setUserList] = useState<User[]>(users);
+  const [filterValue, setFilterValue] = useState<string>("");
+  const [userInputsAndId, setUserInputsAndId] = useState<UserInputsAndId>({
+    name: "",
+    surname: "",
+    id: undefined,
+  });
   const [message, setMessage] = useState<string>("");
+  const filteredUserList = filterUserList(filterValue, userList);
 
-  useEffect(() => {
-    setInputValuesBySelectedId(selectedId, currentNameList);
-    // console.log("updated by selectedId");
-  }, [selectedId]);
-
-  // console.log("re-rendered");
-
-  function handleFilterChange(event: React.ChangeEvent<HTMLInputElement>) {
-    if (!event.target.value) {
-      setfilterValue("");
-      setCurrentNameList(nameList);
-      return;
-    }
-    const formatFilterValue = formatAsName(event.target.value);
-    setfilterValue(formatFilterValue);
-    const matchedNames = filterNamesBySurname(formatFilterValue, nameList);
-    setCurrentNameList(matchedNames);
-    setSelectedId(undefined);
-  }
-
-  function handleCreat() {
-    if (isNameInvalid(frontName) || isNameInvalid(surname)) {
-      setMessage("Please give the richt form of name");
-      return;
-    }
+  function handleCreate() {
     const id = uuidv4();
-    const newName = {
-      frontName: frontName,
-      surname: surname,
+    const newUser = {
+      name: userInputsAndId.name,
+      surname: userInputsAndId.surname,
       id: id,
     };
-    setNameList([...nameList, newName]);
-    setCurrentNameList([...nameList, newName]);
-    // is there a way to re-render only in one time? is it necessary
-    setfilterValue("");
-    setSelectedId(id);
-    setMessage("The name is created");
+    setUserList([...userList, newUser]);
+    setUserInputsAndId(newUser);
+    setFilterValue("");
+    setMessage(
+      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is created`
+    );
   }
 
-  function handleUpdate(selectedId: string | undefined) {
-    if (!selectedId) {
-      setMessage("No name is selected");
+  function handleUpdate() {
+    if (
+      userInputsAndId.id &&
+      (userInputsAndId.name || userInputsAndId.surname)
+    ) {
+      const updatedUserList = userList.map((user) =>
+        user.id !== userInputsAndId.id
+          ? user
+          : {
+              ...user,
+              name: userInputsAndId.name,
+              surname: userInputsAndId.surname,
+            }
+      );
+      setUserList(updatedUserList);
+      setFilterValue("");
+      setMessage(
+        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated`
+      );
       return;
     }
-    if (isNameInvalid(frontName) || isNameInvalid(surname)) {
-      setMessage("Please give the richt form of name");
-      return;
-    }
-    if (selectedId && frontName && surname) {
-      const updatedName = {
-        frontName: frontName,
-        surname: surname,
-        id: selectedId,
-      };
-      const updatedNameList = nameList.map((name) => {
-        return name.id === selectedId ? updatedName : name;
+    throw new Error(
+      `The update didn't go through successfully, the update button should have been disabled.`
+    );
+  }
+
+  function handleDelete() {
+    const updatedUserList = userList.filter(
+      (user) => user.id !== userInputsAndId.id
+    );
+    setUserList(updatedUserList);
+    setFilterValue("");
+    setUserInputsAndId({
+      name: "",
+      surname: "",
+      id: undefined,
+    });
+    setMessage("The user is deleted");
+  }
+
+  function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFilterValue(e.target.value);
+    const user = userList.find((user) => user.id === userInputsAndId.id);
+    if (user && !isUserFiltered(e.target.value, user)) {
+      setUserInputsAndId({
+        name: "",
+        surname: "",
+        id: undefined,
       });
-      setNameList(updatedNameList);
-      setCurrentNameList(updatedNameList);
-      setfilterValue("");
-      setMessage("The name is updated");
     }
-  }
-
-  function handleDelete(selectedId: string | undefined) {
-    if (!selectedId) {
-      setMessage("No name selected");
-      return;
-    }
-    const updatedNameList = nameList.filter((name) => name.id !== selectedId);
-    setNameList(updatedNameList);
-    setCurrentNameList(updatedNameList);
-    setSelectedId(undefined);
-    setfilterValue("");
-    setMessage("The name is deleted");
-  }
-
-  function handleChangeNameInput(event: React.ChangeEvent<HTMLInputElement>) {
-    setFrontName(formatAsName(event.target.value));
-  }
-
-  function handleChangeSurnameInput(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    setSurname(formatAsName(event.target.value));
-  }
-
-  function handleSelectName(event: React.ChangeEvent<HTMLSelectElement>) {
-    setSelectedId(event.target.value);
-  }
-
-  //name?
-  function setInputValuesBySelectedId(
-    selectedId: string | undefined,
-    nameList: FullName[]
-  ) {
-    const selectedName = findNameById(nameList, selectedId);
-    if (!selectedName) {
-      setFrontName("");
-      setSurname("");
-      return;
-    }
-    setFrontName(selectedName.frontName);
-    setSurname(selectedName.surname);
   }
 
   return (
-    <div className="w-full m-auto p-5 bg-blue-100 md:w-4/5  md:bg-green-100 lg:w-4/5  lg:bg-red-100">
-      <label>
-        Filter prefix:
-        <input
-          className="m-2 w-20 rounded border border-black"
-          type="text"
-          value={filterValue}
-          onChange={handleFilterChange}
-        />
-      </label>
-      <select
-        className="w-4/5 h-40 border border-black m-auto md:w-80 overflow-y-scroll "
-        size={10}
-        onChange={handleSelectName}
-        value={selectedId ?? undefined}
-        //didn't re-rendered, when selectedId changed to undefined
-      >
-        {currentNameList.map((fullName) => {
-          return <NameBox key={fullName.id} fullName={fullName} />;
-        })}
-      </select>
-      <div>
-        <label>
-          Name:
-          <input
-            className="m-2 w-20 rounded border border-black"
-            type="text"
-            value={frontName}
-            onChange={handleChangeNameInput}
+    <>
+      <div className="grid grid-flow-row content-between w-[650px] h-[700px] rounded-[10px] m-auto p-7 bg-[#CDD3CE] ">
+        <div>
+          <TextInput
+            children="Filter:"
+            name="filter"
+            value={filterValue}
+            onChange={handleFilterChange}
           />
-        </label>
-        <label>
-          Surname:
-          <input
-            className="m-auto w-20 rounded border border-black"
-            type="text"
-            value={surname}
-            onChange={handleChangeSurnameInput}
+        </div>
+        <div className="flex flex-row justify-between gap-4 text-sm">
+          <select
+            className="w-[261px] h-[397px] border-2 rounded-[5px]  border-black shadow-[5px_5px_4px_0px] shadow-gray-400"
+            size={15}
+            onChange={(e) =>
+              setUserInputsAndId(
+                filteredUserList.find((user) => user.id === e.target.value)!
+              )
+            }
+            aria-label="user list box"
+            value={userInputsAndId.id}
+          >
+            {filteredUserList.map((user) => {
+              return <UserOption key={user.id} user={user} />;
+            })}
+          </select>
+          <div className="flex flex-col content-start gap-3">
+            <TextInput
+              children="Name:"
+              name="name"
+              value={userInputsAndId?.name ?? ""}
+              onChange={(e) =>
+                setUserInputsAndId({ ...userInputsAndId, name: e.target.value })
+              }
+            />
+            <TextInput
+              children="Surname:"
+              name="surname"
+              value={userInputsAndId?.surname ?? ""}
+              onChange={(e) =>
+                setUserInputsAndId({
+                  ...userInputsAndId,
+                  surname: e.target.value,
+                })
+              }
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <DynamicButton
+            name="Create"
+            isDisabled={!userInputsAndId.name && !userInputsAndId.surname}
+            onClick={handleCreate}
           />
-        </label>
-      </div>
-      <div>
-        <button
-          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleCreat()}
-        >
-          Creat
-        </button>
-        <button
-          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleUpdate(selectedId)}
-        >
-          Update
-        </button>
-        <button
-          className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-          onClick={() => handleDelete(selectedId)}
-        >
-          Delete
-        </button>
+          <DynamicButton
+            name="Update"
+            isDisabled={
+              userInputsAndId.id === undefined ||
+              (!userInputsAndId.name && !userInputsAndId.surname)
+            }
+            onClick={handleUpdate}
+          />
+          <DynamicButton
+            isDeleteButton={true}
+            name="Delete"
+            onClick={handleDelete}
+            isDisabled={userInputsAndId.id === undefined}
+          />
+        </div>
       </div>
       <p>{message}</p>
-    </div>
+    </>
   );
 }
 
-function formatAsName(input: string) {
-  if (!input) {
-    return "";
-  }
-  const firstLetter = input[0].toUpperCase();
-  const otherLetters = input.slice(1).toLowerCase();
-  return firstLetter + otherLetters;
+function isUserFiltered(input: string, user: User) {
+  return user?.surname.toLowerCase().startsWith(input.toLowerCase());
 }
 
-function isNameInvalid(input: string) {
-  const regex = /^[a-zA-Z]+$/g;
-  return !regex.test(input);
+export function filterUserList(input: string, list: User[]) {
+  return list.filter((user) => isUserFiltered(input, user));
 }
 
-function filterNamesBySurname(input: string, list: FullName[]): FullName[] {
-  const names = list.filter((name) => name.surname.startsWith(input));
-  return names;
-}
-
-function findNameById(nameList: FullName[], id: string | undefined) {
-  return nameList.find((name) => name.id === id);
-}
-
-function NameBox({ fullName }: { fullName: FullName }) {
+export function UserOption({ user }: { user: User }) {
   return (
-    <option className="text-left pl-2" value={fullName.id}>
-      {fullName.frontName}, {fullName.surname}
+    <option className="text-left pl-2" value={user.id}>
+      {user.name}, {user.surname}
     </option>
   );
 }

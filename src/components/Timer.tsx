@@ -1,32 +1,23 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 export function Timer() {
   const [inputValue, setInputValue] = useState<number>(0);
-  /*  当data直接有相关性的时候,只需一个useState*/
   const duration = inputValue / 10;
-  const [time, resetTime] = useInterval(duration);
-
-  function handleChangeDuration(event: React.ChangeEvent<HTMLInputElement>) {
-    setInputValue(Number(event.target.value));
-  }
-
-  function handleReset() {
-    resetTime();
-    setInputValue(0);
-  }
+  const [elapsedTime, resetElapsedTime] = useInterval(duration);
 
   return (
     <div className="m-auto w-[25rem] p-5  bg-white  lg:bg-red-100">
       <div className="flex w-full m-auto">
-        <p className="flex-aut m-auto">Elapsed Time:{time}s</p>
+        <p className="flex-aut m-auto">Elapsed Time:{elapsedTime}s</p>
         <div className="flex-auto overflow-hidden border border-gray-500 w-1/2 h-6 rounded m-3 bg-red-100">
           <div
             className=" z-1 w-1/2 h-6  bg-blue-500 "
-            style={{ width: `${calculatePercentage(time, duration)}` }}
+            style={{ width: `${calculatePercentage(elapsedTime, duration)}` }}
+            aria-label="Block to show the elapsed time"
           ></div>
         </div>
       </div>
-      <p>{duration}s</p>
+      <p aria-label="Paragraph to show the duration">{duration}s</p>
       <label>
         Duration:
         <input
@@ -36,12 +27,12 @@ export function Timer() {
           min={0}
           max={600}
           value={inputValue}
-          onChange={handleChangeDuration}
+          onChange={(e) => setInputValue(Number(e.target.value))}
         />
       </label>
       <button
         className="flex-auto m-2 w-20 bg-blue-300 hover:bg-emphasis text-gray-700 hover:text-white font-bold"
-        onClick={handleReset}
+        onClick={resetElapsedTime}
       >
         Reset
       </button>
@@ -49,54 +40,38 @@ export function Timer() {
   );
 }
 
-function calculatePercentage(Numerator: number, Denominator: number): string {
-  if (Denominator !== 0) {
-    return `${(Numerator / Denominator) * 100}%`;
+export function calculatePercentage(
+  numerator: number,
+  denominator: number
+): string {
+  if (numerator !== 0 && denominator !== 0) {
+    return `${(numerator / denominator) * 100}%`;
   }
   return "0";
 }
 
 function useInterval(duration: number) {
-  const [time, setTimer] = useState(0);
-  const idRef = useRef<number | undefined>();
-  /* this is the way to use with different callback function, to fit different situation */
-
-  //const callBackRef = useRef<() => void | undefined>();
-
-  // function callback() {
-  //   setTimer(time + 1);
-  // }
-
-  // useEffect(() => {
-  //   callBackRef.current = callback;
-  // });
-
-  if (time >= duration && idRef.current) {
-    console.log("cleared", idRef.current);
-    clearInterval(idRef.current);
-  }
-
+  const [elapsedTime, setElapsedTime] = useState(0);
   useEffect(() => {
-    if (time < duration) {
+    if (elapsedTime < duration) {
       const intervalId = setInterval(() => {
-        setTimer((t) => t + 1);
-        // callBackRef.current?.();
+        setElapsedTime((t) => {
+          const newTime = t + 1;
+          if (newTime >= duration) {
+            clearInterval(intervalId);
+          }
+          return newTime;
+        });
       }, 1000);
-      console.log("started", intervalId);
-      idRef.current = intervalId;
       return () => {
-        console.log("cleared", intervalId);
         clearInterval(intervalId);
       };
-      /*   return 的function会在第二次运行的时候, 被运行.  setTimer((t) => t + 1);也是一样的情况. !!再看一次event loop  */
     }
-  }, [duration]);
-
+  }, [duration, elapsedTime]);
   return [
-    time,
+    elapsedTime,
     () => {
-      setTimer(0);
+      setElapsedTime(0);
     },
   ] as const;
-  /* 也可以type function的return */
 }
