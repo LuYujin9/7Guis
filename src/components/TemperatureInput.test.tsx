@@ -1,16 +1,12 @@
-import { expect, describe, it, vi, beforeEach } from "vitest";
+import { expect, describe, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent, { UserEvent } from "@testing-library/user-event";
+import userEvent from "@testing-library/user-event";
 import { TemperatureInput } from "./TemperatureInput";
 
 describe("TemperatureInput component", () => {
-  let mockHandleChange: () => void;
-  let user: UserEvent;
-  beforeEach(() => {
-    mockHandleChange = vi.fn();
-    user = userEvent.setup();
-  });
   it("should called the onChange function when the input value changes", async () => {
+    const mockHandleChange = vi.fn();
+    const user = userEvent.setup();
     render(
       <TemperatureInput
         name={"celsius"}
@@ -19,13 +15,14 @@ describe("TemperatureInput component", () => {
         isValueInvalid={false}
       />
     );
-    const input = screen.getByLabelText("celsius input");
+    const input = screen.getByRole("textbox", { name: /celsius input/i });
     await user.type(input, "2");
     expect(mockHandleChange).toBeCalledTimes(1);
     await user.type(input, "0");
     expect(mockHandleChange).toBeCalledTimes(2);
   });
   it("should change the background color to red when the  isValueInvalid ist true", async () => {
+    const mockHandleChange = vi.fn();
     render(
       <TemperatureInput
         name={"celsius"}
@@ -34,6 +31,8 @@ describe("TemperatureInput component", () => {
         isValueInvalid={true}
       />
     );
-    expect(screen.getByLabelText("celsius input")).toHaveClass("bg-red-500");
+    expect(screen.getByRole("textbox", { name: /celsius input/i })).toHaveClass(
+      "bg-red-500"
+    );
   });
 });

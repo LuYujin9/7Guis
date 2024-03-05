@@ -1,12 +1,10 @@
-import { beforeEach, describe, expect, it, test, vi } from "vitest";
+import { describe, expect, it, test, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { Timer, calculatePercentage } from "./Timer";
 
-describe("Timer component", () => {
-  beforeEach(() => {
+describe("Timer screen", () => {
+  it("Timer screen should render correct", () => {
     render(<Timer />);
-  });
-  it("Timer component should render correct", () => {
     expect(screen.getByText(/^Elapsed Time:/)).toHaveTextContent(
       "Elapsed Time:0s"
     );
@@ -21,6 +19,7 @@ describe("Timer component", () => {
     expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument();
   });
   it("should reset the elapsed time by clicking reset button", async () => {
+    render(<Timer />);
     const button = screen.getByRole("button", { name: "Reset" });
     button.click();
     expect(screen.getByText(/^Elapsed Time:/)).toHaveTextContent(
@@ -28,12 +27,14 @@ describe("Timer component", () => {
     );
   });
   it("should set the duration by input", async () => {
+    render(<Timer />);
     const input = screen.getByRole("slider", { name: "Duration:" });
     act(() => fireEvent.change(input, { target: { value: "60" } }));
     const paragraph = screen.getByLabelText("Paragraph to show the duration");
     expect(paragraph).toHaveTextContent("6s");
   });
   it("should stop the timer after elapsed time greater as duration", async () => {
+    render(<Timer />);
     vi.useFakeTimers();
     const elapsedTimeParagraph = screen.getByText(/^Elapsed Time:/);
     const input = screen.getByRole("slider", { name: "Duration:" });

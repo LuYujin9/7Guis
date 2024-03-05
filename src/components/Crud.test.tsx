@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
+// import "@testing-library/jest-dom";
 import { Crud, User, UserOption, filterUserList } from "./Crud";
-import { beforeEach, describe, expect, it, test, vi } from "vitest";
-import userEvent, { UserEvent } from "@testing-library/user-event";
+import { describe, expect, it, test, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 
 test("filterUserList should  return a case-insensitive filtered name list", () => {
   const userList = [
@@ -35,7 +36,7 @@ test("filterUserList should  return a case-insensitive filtered name list", () =
 
 test("UserOption component renders with correct text", () => {
   const user = { name: "Jane", surname: "Davis", id: "0" };
-  render(<UserOption user={user} />);
+  const screen = render(<UserOption user={user} />);
   const option = screen.getByRole("option");
   expect(option).toHaveTextContent("Jane, Davis");
 });
@@ -47,20 +48,16 @@ describe("Crud component", () => {
     { name: "Jack", surname: "Roman", id: "2" },
     { name: "Emily", surname: "Roe", id: "3" },
   ];
-  let listBox: HTMLSelectElement;
-  let nameInput: HTMLElement;
-  let surnameInput: HTMLElement;
-  let filterInput: HTMLElement;
-  let user: UserEvent;
-  beforeEach(() => {
-    render(<Crud users={users} />);
-    listBox = screen.getByLabelText<HTMLSelectElement>("user list box");
-    nameInput = screen.getByLabelText("Name:");
-    surnameInput = screen.getByLabelText("Surname:");
-    filterInput = screen.getByLabelText("Filter:");
-    user = userEvent.setup();
-  });
+  function renderCrud() {
+    const user = userEvent.setup();
+    const screen = render(<Crud users={users} />);
+    return { user: user, screen };
+  }
+
   it("should render disabled Create button, when user inputs are empty", async () => {
+    const { user } = renderCrud();
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname:/i });
     const createButton = screen.getByRole("button", { name: /create/i });
     expect(createButton).toHaveAttribute("disabled");
     await user.type(nameInput, "John");
@@ -71,6 +68,10 @@ describe("Crud component", () => {
     expect(createButton).toHaveAttribute("disabled");
   });
   it("should render disabled Update button, when user inputs are empty or an user is not selected", async () => {
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box");
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname/i });
     const updateButton = screen.getByRole("button", { name: /update/i });
     expect(updateButton).toHaveAttribute("disabled");
     await user.type(nameInput, "John");
@@ -82,10 +83,13 @@ describe("Crud component", () => {
     expect(updateButton).toHaveAttribute("disabled");
   });
   it("should render disabled Delete button, when a user is not selected", () => {
+    const { screen } = renderCrud();
     const deleteButton = screen.getByRole("button", { name: /delete/i });
     expect(deleteButton).toHaveAttribute("disabled");
   });
   it("should correctly filter the user list based on a case-insensitive filter", async () => {
+    const { user } = renderCrud();
+    const filterInput = screen.getByLabelText("Filter:");
     await user.type(filterInput, "wI");
     expect(screen.getAllByRole("option")).toHaveLength(1);
     expect(screen.getByText("John, Wilson")).toHaveValue("1");
@@ -97,6 +101,11 @@ describe("Crud component", () => {
   });
 
   it("should clear user inputs and remove selection when the selected user is not in the filtered user list", async () => {
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box") as HTMLSelectElement;
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname:/i });
+    const filterInput = screen.getByLabelText("Filter:");
     await user.selectOptions(listBox, "0");
     expect(nameInput).toHaveValue("Jane");
     expect(surnameInput).toHaveValue("Davis");
@@ -107,6 +116,11 @@ describe("Crud component", () => {
     expect(surnameInput).toHaveValue("");
   });
   it("should keep the selection and user inputs when the id is in the filtered user list", async () => {
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box");
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname:/i });
+    const filterInput = screen.getByLabelText("Filter:");
     await user.selectOptions(listBox, "3");
     expect(nameInput).toHaveValue("Emily");
     expect(surnameInput).toHaveValue("Roe");
@@ -116,6 +130,10 @@ describe("Crud component", () => {
     expect(surnameInput).toHaveValue("Roe");
   });
   it("should update the user inputs when the value in them changed", async () => {
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box");
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname:/i });
     await user.selectOptions(listBox, "3");
     expect(nameInput).toHaveValue("Emily");
     expect(surnameInput).toHaveValue("Roe");
@@ -132,6 +150,11 @@ describe("Crud component", () => {
         v4: vi.fn(() => "4"),
       };
     });
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box");
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname:/i });
+    const filterInput = screen.getByLabelText("Filter:");
     const createButton = screen.getByRole("button", { name: /create/i });
     await user.type(filterInput, "wI");
     expect(screen.getAllByRole("option")).toHaveLength(1);
@@ -148,6 +171,11 @@ describe("Crud component", () => {
     ).toBeInTheDocument();
   });
   it("should update the user list with retained selection and user, when a user is updated ", async () => {
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box");
+    const nameInput = screen.getByRole("textbox", { name: "Name:" });
+    const surnameInput = screen.getByRole("textbox", { name: /Surname:/i });
+    const filterInput = screen.getByLabelText("Filter:");
     const updateButton = screen.getByRole("button", { name: /update/i });
     await user.type(filterInput, "wI");
     expect(screen.getAllByRole("option")).toHaveLength(1);
@@ -167,6 +195,8 @@ describe("Crud component", () => {
     ).toBeInTheDocument();
   });
   it("should update the user list, when a user is deleted", async () => {
+    const { user } = renderCrud();
+    const listBox = screen.getByLabelText("user list box");
     const deleteButton = screen.getByRole("button", { name: /delete/i });
     await user.selectOptions(listBox, "2");
     await user.click(deleteButton);

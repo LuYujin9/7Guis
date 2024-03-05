@@ -1,10 +1,10 @@
-import { expect, describe, it, beforeEach } from "vitest";
+import { expect, describe, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { TemperatureConverter } from "./TemperatureConverter";
-import { UserEvent, userEvent } from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import { Units } from "../pages/TemperatureConverterPage";
 
-describe("TemperatureConverter component", () => {
+describe("TemperatureConverter screen", () => {
   const units = [
     {
       name: "celsius",
@@ -34,18 +34,13 @@ describe("TemperatureConverter component", () => {
       },
     },
   ] satisfies Units;
-  let user: UserEvent;
-  let celsiusInput: HTMLInputElement;
-  let fahrenheitInput: HTMLInputElement;
-  let kelvinInput: HTMLInputElement;
-  beforeEach(() => {
-    render(<TemperatureConverter units={units} />);
-    user = userEvent.setup();
-    celsiusInput = screen.getByLabelText("celsius input");
-    fahrenheitInput = screen.getByLabelText("fahrenheit input");
-    kelvinInput = screen.getByLabelText("kelvin input");
-  });
+  function renderTemperatureConverter() {
+    const user = userEvent.setup();
+    const renderer = render(<TemperatureConverter units={units} />);
+    return { renderer, user } as const;
+  }
   it("should render with different units", () => {
+    renderTemperatureConverter();
     const twoUnits = [
       {
         name: "celsius",
@@ -77,6 +72,10 @@ describe("TemperatureConverter component", () => {
     expect(screen.getAllByLabelText("kelvin")).toHaveLength(1);
   });
   it("should update the other inputs with correct converted values, when a number is entered in an input", async () => {
+    const { user } = renderTemperatureConverter();
+    const celsiusInput = screen.getByLabelText("celsius input");
+    const fahrenheitInput = screen.getByLabelText("fahrenheit input");
+    const kelvinInput = screen.getByLabelText("kelvin input");
     await user.type(celsiusInput, "0");
     expect(fahrenheitInput).toHaveValue("32");
     expect(kelvinInput).toHaveValue("273.15");
@@ -102,7 +101,12 @@ describe("TemperatureConverter component", () => {
     expect(kelvinInput).toHaveValue("366.48");
   });
   it("should not update the other inputs when an invalid value is entered in an input", async () => {
-    const kelvinInput = screen.getByLabelText<HTMLInputElement>("kelvin input");
+    const { user } = renderTemperatureConverter();
+    const celsiusInput = screen.getByLabelText("celsius input");
+    const fahrenheitInput = screen.getByLabelText("fahrenheit input");
+    const kelvinInput = screen.getByLabelText(
+      "kelvin input"
+    ) as HTMLInputElement;
     await user.type(celsiusInput, "5");
     expect(celsiusInput).toHaveValue("5");
     expect(fahrenheitInput).toHaveValue("41");
@@ -129,6 +133,10 @@ describe("TemperatureConverter component", () => {
     expect(kelvinInput).toHaveValue("278.68");
   });
   it("should change inputs background color to red when converted value to celsius is below -273.15", async () => {
+    const { user } = renderTemperatureConverter();
+    const celsiusInput = screen.getByLabelText("celsius input");
+    const fahrenheitInput = screen.getByLabelText("fahrenheit input");
+    const kelvinInput = screen.getByLabelText("kelvin input");
     await user.type(celsiusInput, "-273.16");
     expect(celsiusInput).toHaveClass("bg-red-500");
     await user.clear(celsiusInput);
