@@ -2,6 +2,7 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { DynamicButton } from "./DynamicButton";
+import { getDate } from "../pages/CrudPage";
 
 export type User = {
   name: string;
@@ -9,9 +10,29 @@ export type User = {
   id: string;
 };
 type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
-type props = { users: User[] };
+type props = { users: User[] | null };
+type PostOptions = {
+  method: string;
+  body: string;
+  headers: {
+    "Content-type": string;
+  };
+};
+
+async function postDate(url: string, options: PostOptions) {
+  try {
+    const response = await fetch(url, options);
+    if (response.ok) {
+      console.log("ok");
+    }
+    if (response.status === 404) throw new Error("404, Not found");
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export function Crud({ users }: props) {
-  const [userList, setUserList] = useState<User[]>(users);
+  const [userList, setUserList] = useState<User[] | null>(users);
   const [filterValue, setFilterValue] = useState<string>("");
   const [userInputsAndId, setUserInputsAndId] = useState<UserInputsAndId>({
     name: "",
@@ -20,15 +41,27 @@ export function Crud({ users }: props) {
   });
   const [message, setMessage] = useState<string>("");
   const filteredUserList = filterUserList(filterValue, userList);
-
-  function handleCreate() {
+  console.log(userList);
+  async function handleCreate() {
     const id = uuidv4();
     const newUser = {
       name: userInputsAndId.name,
       surname: userInputsAndId.surname,
       id: id,
     };
-    setUserList([...userList, newUser]);
+
+    const options: PostOptions = {
+      method: "POST",
+      body: JSON.stringify([...(userList ?? []), newUser]),
+      headers: { "Content-type": "application/json; charset=UTF-8" },
+    };
+
+    await postDate("/api/users", options);
+    getDate("/api/users", (data) => {
+      setUserList(data);
+    });
+
+    // setUserList([...(userList ?? []), newUser]);
     setUserInputsAndId(newUser);
     setFilterValue("");
     setMessage(
@@ -41,7 +74,7 @@ export function Crud({ users }: props) {
       userInputsAndId.id &&
       (userInputsAndId.name || userInputsAndId.surname)
     ) {
-      const updatedUserList = userList.map((user) =>
+      const updatedUserList = userList?.map((user) =>
         user.id !== userInputsAndId.id
           ? user
           : {
@@ -50,7 +83,7 @@ export function Crud({ users }: props) {
               surname: userInputsAndId.surname,
             }
       );
-      setUserList(updatedUserList);
+      setUserList(updatedUserList ?? null);
       setFilterValue("");
       setMessage(
         `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated`
@@ -63,10 +96,10 @@ export function Crud({ users }: props) {
   }
 
   function handleDelete() {
-    const updatedUserList = userList.filter(
+    const updatedUserList = userList?.filter(
       (user) => user.id !== userInputsAndId.id
     );
-    setUserList(updatedUserList);
+    setUserList(updatedUserList ?? null);
     setFilterValue("");
     setUserInputsAndId({
       name: "",
@@ -78,7 +111,7 @@ export function Crud({ users }: props) {
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFilterValue(e.target.value);
-    const user = userList.find((user) => user.id === userInputsAndId.id);
+    const user = userList?.find((user) => user.id === userInputsAndId.id);
     if (user && !isUserFiltered(e.target.value, user)) {
       setUserInputsAndId({
         name: "",
@@ -105,13 +138,13 @@ export function Crud({ users }: props) {
             size={15}
             onChange={(e) =>
               setUserInputsAndId(
-                filteredUserList.find((user) => user.id === e.target.value)!
+                filteredUserList?.find((user) => user.id === e.target.value)!
               )
             }
             aria-label="user list box"
             value={userInputsAndId.id}
           >
-            {filteredUserList.map((user) => {
+            {filteredUserList?.map((user) => {
               return <UserOption key={user.id} user={user} />;
             })}
           </select>
@@ -168,8 +201,8 @@ function isUserFiltered(input: string, user: User) {
   return user?.surname.toLowerCase().startsWith(input.toLowerCase());
 }
 
-export function filterUserList(input: string, list: User[]) {
-  return list.filter((user) => isUserFiltered(input, user));
+export function filterUserList(input: string, list: User[] | null) {
+  return list?.filter((user) => isUserFiltered(input, user));
 }
 
 export function UserOption({ user }: { user: User }) {

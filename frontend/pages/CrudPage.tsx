@@ -1,24 +1,42 @@
 import { NavLink } from "react-router-dom";
 import { Crud, User } from "../components/Crud";
+import { useEffect, useState } from "react";
 
-const initialUsers: User[] = [
-  { name: "Jane", surname: "Davis", id: "0" },
-  { name: "John", surname: "Wilson", id: "1" },
-  { name: "Jack", surname: "Roman", id: "2" },
-  { name: "Isabella", surname: "White", id: "3" },
-  { name: "Jane", surname: "Davis", id: "4" },
-  { name: "John", surname: "Wilson", id: "5" },
-  { name: "Jack", surname: "Roman", id: "6" },
-  { name: "Isabella", surname: "White", id: "7" },
-  { name: "Jane", surname: "Davis", id: "8" },
-  { name: "John", surname: "Wilson", id: "9" },
-  { name: "Jack", surname: "Roman", id: "10" },
-];
+export async function getDate(
+  url: string,
+  setData: (data: any) => void, // data is any type. ok??
+  signal?: AbortSignal
+) {
+  try {
+    const response = await fetch(url, { method: "GET", signal: signal });
+    if (response.ok) {
+      const data = await response.json();
+      setData(data);
+    }
+    if (response.status === 404) throw new Error("404, Not found");
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 export function CrudPage() {
+  const [users, setUsers] = useState<User[] | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getDate(
+      "/api/users",
+      (data) => {
+        setUsers(data);
+      },
+      controller.signal
+    );
+    return () => controller.abort();
+  }, []);
+
   return (
     <>
-      <Crud users={initialUsers} />
+      {users ? <Crud users={users} /> : <div>loading...</div>}
       <NavLink to="/">Back to homepage</NavLink>
     </>
   );
