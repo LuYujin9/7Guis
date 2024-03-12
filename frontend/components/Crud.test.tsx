@@ -2,6 +2,11 @@ import { render, screen } from "@testing-library/react";
 import { Crud, User, UserOption, filterUserList } from "./Crud";
 import { describe, expect, it, test, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { beforeEach } from "node:test";
+
+// beforeEach(() => {
+//   vi.mock("../resources.ts");
+// });
 
 test("filterUserList should  return a case-insensitive filtered name list", () => {
   const userList = [

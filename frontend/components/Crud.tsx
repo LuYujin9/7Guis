@@ -1,38 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { DynamicButton } from "./DynamicButton";
-import { getDate } from "../pages/CrudPage";
+import { createUser, deleteUser, fetchUsers, updateUser } from "../resources";
+import { z } from "zod";
+import { userSchema } from "../../zod/zodSchema";
 
-export type User = {
-  name: string;
-  surname: string;
-  id: string;
-};
-type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
-type props = { users: User[] | null };
-type PostOptions = {
-  method: string;
-  body: string;
-  headers: {
-    "Content-type": string;
-  };
-};
+export type User = z.infer<typeof userSchema>;
+export type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
 
-async function postDate(url: string, options: PostOptions) {
-  try {
-    const response = await fetch(url, options);
-    if (response.ok) {
-      console.log("ok");
-    }
-    if (response.status === 404) throw new Error("404, Not found");
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-export function Crud({ users }: props) {
-  const [userList, setUserList] = useState<User[] | null>(users);
+export function Crud() {
+  const [userList, setUserList] = useState<User[] | null>(null);
   const [filterValue, setFilterValue] = useState<string>("");
   const [userInputsAndId, setUserInputsAndId] = useState<UserInputsAndId>({
     name: "",
@@ -41,7 +19,18 @@ export function Crud({ users }: props) {
   });
   const [message, setMessage] = useState<string>("");
   const filteredUserList = filterUserList(filterValue, userList);
-  console.log(userList);
+
+  async function getUsers(signal?: AbortSignal) {
+    const users = await fetchUsers(signal);
+    setUserList(users === false ? null : users);
+  }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    getUsers(controller.signal);
+    return () => controller.abort();
+  }, []);
+
   async function handleCreate() {
     const id = uuidv4();
     const newUser = {
@@ -49,19 +38,11 @@ export function Crud({ users }: props) {
       surname: userInputsAndId.surname,
       id: id,
     };
-
-    const options: PostOptions = {
-      method: "POST",
-      body: JSON.stringify([...(userList ?? []), newUser]),
-      headers: { "Content-type": "application/json; charset=UTF-8" },
-    };
-
-    await postDate("/api/users", options);
-    getDate("/api/users", (data) => {
-      setUserList(data);
-    });
-
-    // setUserList([...(userList ?? []), newUser]);
+    const isPosted = await createUser(newUser);
+    if (!isPosted) {
+      throw new Error("the user is not created");
+    }
+    getUsers();
     setUserInputsAndId(newUser);
     setFilterValue("");
     setMessage(
@@ -69,37 +50,39 @@ export function Crud({ users }: props) {
     );
   }
 
-  function handleUpdate() {
+  async function handleUpdate() {
     if (
-      userInputsAndId.id &&
-      (userInputsAndId.name || userInputsAndId.surname)
+      !userInputsAndId.id ||
+      (!userInputsAndId.name && !userInputsAndId.surname)
     ) {
-      const updatedUserList = userList?.map((user) =>
-        user.id !== userInputsAndId.id
-          ? user
-          : {
-              ...user,
-              name: userInputsAndId.name,
-              surname: userInputsAndId.surname,
-            }
-      );
-      setUserList(updatedUserList ?? null);
-      setFilterValue("");
-      setMessage(
-        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated`
-      );
       return;
     }
-    throw new Error(
-      `The update didn't go through successfully, the update button should have been disabled.`
+    const updatedUser = {
+      name: userInputsAndId.name,
+      surname: userInputsAndId.surname,
+      id: userInputsAndId.id,
+    };
+    const isUpdated = await updateUser(updatedUser);
+    if (!isUpdated) {
+      throw new Error("the user is not updated");
+    }
+    getUsers();
+    setFilterValue("");
+    setMessage(
+      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated`
     );
+    return;
   }
 
-  function handleDelete() {
-    const updatedUserList = userList?.filter(
-      (user) => user.id !== userInputsAndId.id
-    );
-    setUserList(updatedUserList ?? null);
+  async function handleDelete() {
+    if (!userInputsAndId.id) {
+      return;
+    }
+    const isDelete = await deleteUser(userInputsAndId.id);
+    if (!isDelete) {
+      throw new Error("the user is not deleted");
+    }
+    getUsers();
     setFilterValue("");
     setUserInputsAndId({
       name: "",
