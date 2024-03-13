@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { DynamicButton } from "./DynamicButton";
-import { createUser, deleteUser, fetchUsers, updateUser } from "../resources";
 import { z } from "zod";
 import { userSchema } from "../../zod/zodSchema";
+import { handleUserRequest } from "../pages/api/users";
 
 export type User = z.infer<typeof userSchema>;
 export type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
@@ -20,15 +20,20 @@ export function Crud() {
   const [message, setMessage] = useState<string>("");
   const filteredUserList = filterUserList(filterValue, userList);
 
-  async function getUsers(signal?: AbortSignal) {
-    const users = await fetchUsers(signal);
+  async function getUsers() {
+    const users = await handleUserRequest("GET");
+    console.log(users);
+    if (users === true) {
+      throw new Error(
+        "Unexpected error, handleUserRequest function with GET method shouldn't return a true value."
+      );
+    }
     setUserList(users === false ? null : users);
   }
 
   useEffect(() => {
-    const controller = new AbortController();
-    getUsers(controller.signal);
-    return () => controller.abort();
+    console.log(userList);
+    getUsers();
   }, []);
 
   async function handleCreate() {
@@ -38,15 +43,18 @@ export function Crud() {
       surname: userInputsAndId.surname,
       id: id,
     };
-    const isPosted = await createUser(newUser);
+    const isPosted = await handleUserRequest("POST", newUser);
     if (!isPosted) {
-      throw new Error("the user is not created");
+      setMessage(
+        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not created.`
+      );
+      return;
     }
     getUsers();
     setUserInputsAndId(newUser);
     setFilterValue("");
     setMessage(
-      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is created`
+      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is created.`
     );
   }
 
@@ -62,25 +70,32 @@ export function Crud() {
       surname: userInputsAndId.surname,
       id: userInputsAndId.id,
     };
-    const isUpdated = await updateUser(updatedUser);
+    const isUpdated = await handleUserRequest("PUT", updatedUser);
+    //问题: when the parameter is not in right format, why there is no report for error?
+    //when typescript checked? it will be not check in the api?
     if (!isUpdated) {
-      throw new Error("the user is not updated");
+      setMessage(
+        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not updated.`
+      );
+      return;
     }
     getUsers();
     setFilterValue("");
     setMessage(
-      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated`
+      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated.`
     );
-    return;
   }
 
   async function handleDelete() {
     if (!userInputsAndId.id) {
       return;
     }
-    const isDelete = await deleteUser(userInputsAndId.id);
+    const isDelete = await handleUserRequest("DELETE", {
+      id: userInputsAndId.id,
+    });
     if (!isDelete) {
-      throw new Error("the user is not deleted");
+      setMessage("The user is not deleted.");
+      return;
     }
     getUsers();
     setFilterValue("");
@@ -89,7 +104,7 @@ export function Crud() {
       surname: "",
       id: undefined,
     });
-    setMessage("The user is deleted");
+    setMessage("The user is deleted.");
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {

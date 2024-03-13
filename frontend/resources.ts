@@ -1,27 +1,28 @@
+import { usersSchema } from "../zod/zodSchema";
 import { User } from "./components/Crud";
+import { Users } from "./pages/api/users";
 
-export async function fetchUsers(
-  signal?: AbortSignal
-): Promise<User[] | false> {
+export async function fetchUsers(signal?: AbortSignal): Promise<Users | false> {
   try {
     const response = await fetch("/api/users", {
       method: "GET",
       signal: signal,
-    }); //readable stream. it is a stream , only can read one time
+    });
     if (response.ok) {
       const data = await response.json();
-      return data;
-    }
-    if (response.status === 404) {
-      throw new Error("404, Not found");
+      const parsedUsers = usersSchema.safeParse(data);
+      if (!parsedUsers.success) {
+        throw new Error("The format of users are not right.");
+      }
+      return parsedUsers.data;
     }
     const body = await response.json();
-    throw new Error(JSON.stringify(body.error));
+    throw new Error(`${body.error.code}, ${body.error.message}`);
   } catch (error) {
     console.error(error);
     return false;
   }
-} //are they api?
+}
 
 export async function createUser(user: User): Promise<boolean> {
   try {
@@ -33,11 +34,8 @@ export async function createUser(user: User): Promise<boolean> {
     if (response.ok) {
       return true;
     }
-    if (response.status === 404) {
-      throw new Error("404, Not found");
-    }
-    const error = await response.json();
-    throw new Error(error.message);
+    const body = await response.json();
+    throw new Error(`${body.error.code}, ${body.error.message}`);
   } catch (error) {
     console.error(error);
     return false;
@@ -54,11 +52,8 @@ export async function updateUser(user: User): Promise<boolean> {
     if (response.ok) {
       return true;
     }
-    if (response.status === 404) {
-      throw new Error("404, Not found");
-    }
-    const error = await response.json();
-    throw new Error(error.message);
+    const body = await response.json();
+    throw new Error(`${body.error.code}, ${body.error.message}`);
   } catch (error) {
     console.error(error);
     return false;
@@ -75,11 +70,8 @@ export async function deleteUser(id: string): Promise<boolean> {
     if (response.ok) {
       return true;
     }
-    if (response.status === 404) {
-      throw new Error("404, Not found");
-    }
-    const error = await response.json();
-    throw new Error(error.message);
+    const body = await response.json();
+    throw new Error(`${body.error.code}, ${body.error.message}`);
   } catch (error) {
     console.error(error);
     return false;
