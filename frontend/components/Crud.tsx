@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { DynamicButton } from "./DynamicButton";
 import { z } from "zod";
-import { userSchema, usersSchema } from "../../zod/zodSchema";
+import { userSchema } from "../../zod/zodSchema";
 import { createUser, deleteUser, fetchUsers, updateUser } from "../resources";
 
 export type User = z.infer<typeof userSchema>;
@@ -47,7 +47,7 @@ export function Crud() {
         success: false,
         message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not created.`,
       });
-      throw promise.error; //有code的时候, cosole已经有内容了. 还需要throw吗, 什么情况下需要特别的throw??
+      throw promise.error; //有code的时候, console已经有内容了. 还需要throw吗, 什么情况下需要特别的throw??
     }
     getUsers();
     setUserInputsAndId(newUser);

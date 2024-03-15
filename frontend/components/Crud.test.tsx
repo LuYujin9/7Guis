@@ -1,13 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { Crud, UserOption, filterUserList } from "./Crud";
+import { Crud, User, UserOption, filterUserList } from "./Crud";
 import { describe, expect, it, test, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-vi.mock("../pages/api/users.ts");
+vi.mock("../resources");
 import { beforeEach } from "node:test";
-import { Users, handleUserRequest } from "../pages/api/users";
+import { fetchUsers, createUser, updateUser, deleteUser } from "../resources";
+import { Response } from "../resources";
 
 test("filterUserList should  return a case-insensitive filtered name list", () => {
-  const userList: Users = [
+  const userList: User[] = [
     { name: "Jane", surname: "Davis", id: "0" },
     { name: "John", surname: "Wilson", id: "1" },
     { name: "Jack", surname: "Roman", id: "2" },
@@ -44,14 +45,17 @@ test("UserOption component renders with correct text", () => {
 });
 
 describe("Crud component", () => {
-  const usersPromise: Promise<Users> = Promise.resolve([
-    { name: "Jane", surname: "Davis", id: "0" },
-    { name: "John", surname: "Wilson", id: "1" },
-    { name: "Jack", surname: "Roman", id: "2" },
-    { name: "Emily", surname: "Roe", id: "3" },
-  ]);
+  const fetchPromise: Promise<Response<User[]>> = Promise.resolve({
+    type: "ok",
+    data: [
+      { name: "Jane", surname: "Davis", id: "0" },
+      { name: "John", surname: "Wilson", id: "1" },
+      { name: "Jack", surname: "Roman", id: "2" },
+      { name: "Emily", surname: "Roe", id: "3" },
+    ],
+  });
   function renderCrud() {
-    vi.mocked(handleUserRequest).mockReturnValue(usersPromise);
+    vi.mocked(fetchUsers).mockReturnValue(fetchPromise);
     const user = userEvent.setup();
     const screen = render(<Crud />);
     return { user: user, screen };
@@ -158,13 +162,20 @@ describe("Crud component", () => {
         v4: vi.fn(() => "4"),
       };
     });
-    const postPromise: Promise<Users> = Promise.resolve([
-      { name: "Jane", surname: "Davis", id: "0" },
-      { name: "John", surname: "Wilson", id: "1" },
-      { name: "Jack", surname: "Roman", id: "2" },
-      { name: "Emily", surname: "Roe", id: "3" },
-      { name: "Bella", surname: "Roman", id: "4" },
-    ]);
+    const fetchPromiseAfterCreate: Promise<Response<User[]>> = Promise.resolve({
+      type: "ok",
+      data: [
+        { name: "Jane", surname: "Davis", id: "0" },
+        { name: "John", surname: "Wilson", id: "1" },
+        { name: "Jack", surname: "Roman", id: "2" },
+        { name: "Emily", surname: "Roe", id: "3" },
+        { name: "Bella", surname: "Roman", id: "4" },
+      ],
+    });
+    const createPromise: Promise<Response<string>> = Promise.resolve({
+      type: "ok",
+      data: "The new user is created.",
+    });
     const { user } = renderCrud();
     const listBox = await screen.findByLabelText("user list box");
     const nameInput = screen.getByRole("textbox", { name: "Name:" });
@@ -175,7 +186,8 @@ describe("Crud component", () => {
     expect(screen.getAllByRole("option")).toHaveLength(1);
     await user.type(nameInput, "Bella");
     await user.type(surnameInput, "Roman");
-    vi.mocked(handleUserRequest).mockReturnValue(postPromise);
+    vi.mocked(createUser).mockReturnValue(createPromise);
+    vi.mocked(fetchUsers).mockReturnValue(fetchPromiseAfterCreate);
     await user.click(createButton);
     expect(await screen.findAllByRole("option")).toHaveLength(5);
     expect(nameInput).toHaveValue("Bella");
@@ -187,12 +199,19 @@ describe("Crud component", () => {
     ).toBeInTheDocument();
   });
   it("should update the user list with retained selection and user, when a user is updated ", async () => {
-    const updatePromise: Promise<Users> = Promise.resolve([
-      { name: "Jane", surname: "Davis", id: "0" },
-      { name: "Bella", surname: "Roman", id: "1" },
-      { name: "Jack", surname: "Roman", id: "2" },
-      { name: "Emily", surname: "Roe", id: "3" },
-    ]);
+    const fetchPromiseAfterUpdate: Promise<Response<User[]>> = Promise.resolve({
+      type: "ok",
+      data: [
+        { name: "Jane", surname: "Davis", id: "0" },
+        { name: "Bella", surname: "Roman", id: "1" },
+        { name: "Jack", surname: "Roman", id: "2" },
+        { name: "Emily", surname: "Roe", id: "3" },
+      ],
+    });
+    const updatePromise: Promise<Response<string>> = Promise.resolve({
+      type: "ok",
+      data: "The new user is updated.",
+    });
     const { user } = renderCrud();
     const listBox = await screen.findByLabelText("user list box");
     const nameInput = screen.getByRole("textbox", { name: "Name:" });
@@ -206,7 +225,8 @@ describe("Crud component", () => {
     await user.type(nameInput, "Bella");
     await user.clear(surnameInput);
     await user.type(surnameInput, "Roman");
-    vi.mocked(handleUserRequest).mockReturnValue(updatePromise);
+    vi.mocked(updateUser).mockReturnValue(updatePromise);
+    vi.mocked(fetchUsers).mockReturnValue(fetchPromiseAfterUpdate);
     await user.click(updateButton);
     expect(screen.getAllByRole("option")).toHaveLength(4);
     expect(nameInput).toHaveValue("Bella");
@@ -218,16 +238,24 @@ describe("Crud component", () => {
     ).toBeInTheDocument();
   });
   it("should update the user list, when a user is deleted", async () => {
-    const deletePromise: Promise<Users> = Promise.resolve([
-      { name: "Jane", surname: "Davis", id: "0" },
-      { name: "John", surname: "Wilson", id: "1" },
-      { name: "Emily", surname: "Roe", id: "3" },
-    ]);
+    const fetchPromiseAfterDelete: Promise<Response<User[]>> = Promise.resolve({
+      type: "ok",
+      data: [
+        { name: "Jane", surname: "Davis", id: "0" },
+        { name: "John", surname: "Wilson", id: "1" },
+        { name: "Emily", surname: "Roe", id: "3" },
+      ],
+    });
+    const deletePromise: Promise<Response<string>> = Promise.resolve({
+      type: "ok",
+      data: "The new user is created.",
+    });
     const { user } = renderCrud();
     const listBox = await screen.findByLabelText("user list box");
     const deleteButton = screen.getByRole("button", { name: /delete/i });
     await user.selectOptions(listBox, "2");
-    vi.mocked(handleUserRequest).mockReturnValue(deletePromise);
+    vi.mocked(deleteUser).mockReturnValue(deletePromise);
+    vi.mocked(fetchUsers).mockReturnValue(fetchPromiseAfterDelete);
     await user.click(deleteButton);
     expect(screen.getAllByRole("option")).toHaveLength(3);
     expect(screen.queryAllByText("Jack, Roman")).toHaveLength(0);

@@ -2,7 +2,7 @@ import { usersSchema } from "../zod/zodSchema";
 import { User } from "./components/Crud";
 
 // Generics
-type Response<Data> =
+export type Response<Data> =
   | {
       type: "ok";
       data: Data;
@@ -40,7 +40,7 @@ export async function fetchUsers(): Promise<Response<User[]>> {
       }
       return ok(parsedUsers.data);
     } catch (error) {
-      return err("json parsing failed");
+      return err("json parsing failed.");
     }
   } catch (error) {
     return err("fetch failed");
@@ -61,7 +61,7 @@ export async function createUser(user: User): Promise<Response<string>> {
       // console.log(response.json());
       return err([response.status, response.statusText].join(", "));
     }
-    return ok("The new user is created ");
+    return ok("The new user is created.");
   } catch (error) {
     return err("fetch failed");
   }
@@ -77,7 +77,7 @@ export async function updateUser(user: User): Promise<Response<string>> {
     if (!response.ok) {
       return err([response.status, response.statusText].join(", "));
     }
-    return ok("The new user is created ");
+    return ok("The user is updated.");
   } catch (error) {
     return err("fetch failed");
   }
@@ -102,7 +102,7 @@ export async function deleteUser(id: string): Promise<Response<string>> {
       }
       return err([response.status, response.statusText].join(", "));
     }
-    return ok("The new user is created ");
+    return ok("The user is deleted.");
   } catch (error) {
     return err("fetch failed");
   }
