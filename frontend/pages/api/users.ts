@@ -8,7 +8,8 @@ export type Id = z.infer<typeof idSchema>;
 
 export async function handleUserRequest(
   method: "GET" | "POST" | "PUT" | "DELETE",
-  input?: User | Id
+  // input?: User | Id
+  input?: User | Id | string
 ): Promise<Users | boolean> {
   if (method === "GET") {
     try {
@@ -36,7 +37,8 @@ export async function handleUserRequest(
     try {
       const response = await fetch("/api/users", {
         method: method,
-        body: JSON.stringify(input),
+        // body: JSON.stringify(input),
+        body: JSON.stringify("input"),
         headers: { "Content-type": "application/json; charset=UTF-8" },
       });
       if (response.ok) {

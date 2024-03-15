@@ -3,11 +3,12 @@ import { v4 as uuidv4 } from "uuid";
 import { TextInput } from "./TextInput";
 import { DynamicButton } from "./DynamicButton";
 import { z } from "zod";
-import { userSchema } from "../../zod/zodSchema";
-import { handleUserRequest } from "../pages/api/users";
+import { userSchema, usersSchema } from "../../zod/zodSchema";
+import { createUser, deleteUser, fetchUsers, updateUser } from "../resources";
 
 export type User = z.infer<typeof userSchema>;
 export type UserInputsAndId = Omit<User, "id"> & { id: string | undefined };
+export type Status = { success: boolean; message: string };
 
 export function Crud() {
   const [userList, setUserList] = useState<User[] | null>(null);
@@ -17,22 +18,19 @@ export function Crud() {
     surname: "",
     id: undefined,
   });
-  const [message, setMessage] = useState<string>("");
+  const [status, setStatus] = useState<Status>({ success: true, message: "" });
   const filteredUserList = filterUserList(filterValue, userList);
 
   async function getUsers() {
-    const users = await handleUserRequest("GET");
-    console.log(users);
-    if (users === true) {
-      throw new Error(
-        "Unexpected error, handleUserRequest function with GET method shouldn't return a true value."
-      );
+    const promise = await fetchUsers();
+    if (promise.type === "ok") {
+      setUserList(promise.data);
+      return;
     }
-    setUserList(users === false ? null : users);
+    throw promise.error;
   }
 
   useEffect(() => {
-    console.log(userList);
     getUsers();
   }, []);
 
@@ -43,19 +41,21 @@ export function Crud() {
       surname: userInputsAndId.surname,
       id: id,
     };
-    const isPosted = await handleUserRequest("POST", newUser);
-    if (!isPosted) {
-      setMessage(
-        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not created.`
-      );
-      return;
+    const promise = await createUser(newUser);
+    if (promise.type === "error") {
+      setStatus({
+        success: false,
+        message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not created.`,
+      });
+      throw promise.error; //有code的时候, cosole已经有内容了. 还需要throw吗, 什么情况下需要特别的throw??
     }
     getUsers();
     setUserInputsAndId(newUser);
     setFilterValue("");
-    setMessage(
-      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is created.`
-    );
+    setStatus({
+      success: true,
+      message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is created.`,
+    });
   }
 
   async function handleUpdate() {
@@ -70,32 +70,32 @@ export function Crud() {
       surname: userInputsAndId.surname,
       id: userInputsAndId.id,
     };
-    const isUpdated = await handleUserRequest("PUT", updatedUser);
+    const promise = await updateUser(updatedUser);
     //问题: when the parameter is not in right format, why there is no report for error?
     //when typescript checked? it will be not check in the api?
-    if (!isUpdated) {
-      setMessage(
-        `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not updated.`
-      );
-      return;
+    if (promise.type === "error") {
+      setStatus({
+        success: false,
+        message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not updated.`,
+      });
+      throw promise.error;
     }
     getUsers();
     setFilterValue("");
-    setMessage(
-      `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated.`
-    );
+    setStatus({
+      success: true,
+      message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is updated.`,
+    });
   }
 
   async function handleDelete() {
     if (!userInputsAndId.id) {
       return;
     }
-    const isDelete = await handleUserRequest("DELETE", {
-      id: userInputsAndId.id,
-    });
-    if (!isDelete) {
-      setMessage("The user is not deleted.");
-      return;
+    const promise = await deleteUser(userInputsAndId.id);
+    if (promise.type === "error") {
+      setStatus({ success: false, message: "The user is not deleted." });
+      throw promise.error;
     }
     getUsers();
     setFilterValue("");
@@ -104,7 +104,7 @@ export function Crud() {
       surname: "",
       id: undefined,
     });
-    setMessage("The user is deleted.");
+    setStatus({ success: true, message: "The user is deleted." });
   }
 
   function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -190,7 +190,9 @@ export function Crud() {
           />
         </div>
       </div>
-      <p>{message}</p>
+      <p className={`${status.success ? null : "text-red-500"}`}>
+        {status.message}
+      </p>
     </>
   );
 }
