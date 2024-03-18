@@ -13,8 +13,8 @@ export type Response<Data> =
       data?: never;
       error: string;
     };
-//因为type的兼容性, data有可能是string, 有可能在error的情况下,还有data, 所以写作never,来保证它永远不存在.????
-
+//问题: 因为type的兼容性, data有可能是string, 有可能在error的情况下,还有data, 所以写作never,来保证它永远不存在.????和 flightbook里的写法有什么不同?
+//TO DU: if (response.status === 400) 400的时候特别接收到具体的type内容,感觉400和404需要特别知道.
 function ok<T>(data: T): Response<T> {
   return { type: "ok", data };
 }
@@ -54,11 +54,7 @@ export async function createUser(user: User): Promise<Response<string>> {
       body: JSON.stringify(user),
       headers: { "Content-type": "application/json; charset=UTF-8" },
     });
-    // console.log(response);
     if (!response.ok) {
-      // TO DO if (response.status === 400) 400的时候特别接收到具体的type内容
-      //需要了解例如404和400吗????
-      // console.log(response.json());
       return err([response.status, response.statusText].join(", "));
     }
     return ok("The new user is created.");

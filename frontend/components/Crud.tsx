@@ -45,7 +45,7 @@ export function Crud() {
     if (promise.type === "error") {
       setStatus({
         success: false,
-        message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not created.`,
+        message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not created. Please try again later.`,
       });
       throw promise.error; //有code的时候, console已经有内容了. 还需要throw吗, 什么情况下需要特别的throw??
     }
@@ -76,7 +76,7 @@ export function Crud() {
     if (promise.type === "error") {
       setStatus({
         success: false,
-        message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not updated.`,
+        message: `The user ${userInputsAndId.name}, ${userInputsAndId.surname} is not updated. Please try again later.`,
       });
       throw promise.error;
     }
@@ -94,7 +94,10 @@ export function Crud() {
     }
     const promise = await deleteUser(userInputsAndId.id);
     if (promise.type === "error") {
-      setStatus({ success: false, message: "The user is not deleted." });
+      setStatus({
+        success: false,
+        message: "The user is not deleted. Please try again later.",
+      });
       throw promise.error;
     }
     getUsers();
