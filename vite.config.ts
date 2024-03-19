@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vite";
+import { defineConfig, resolveConfig } from "vite";
+import path from "path";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -13,5 +14,8 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "frontend/test/setup.tsx",
+    alias: {
+      "$7-GUIS/backend/filePath": path.resolve("./mocks/filePath.js"),
+    },
   },
 });

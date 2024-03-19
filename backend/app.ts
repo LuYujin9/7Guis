@@ -1,29 +1,28 @@
-import { User } from "./../frontend/components/Crud";
-import fs from "fs/promises";
 import zodToJsonSchema from "zod-to-json-schema";
 import { idSchema, userSchema, usersSchema } from "../zod/zodSchema";
 import fastify from "fastify";
-import { filePath } from "./connect";
+import { Database } from "./database";
 
-const userJsonSchema = zodToJsonSchema(userSchema, "userSchema");
-const idJsonSchema = zodToJsonSchema(idSchema, "idSchema");
+export const userJsonSchema = zodToJsonSchema(userSchema, "userSchema");
+export const idJsonSchema = zodToJsonSchema(idSchema, "idSchema");
 
-export function build(opts = {}) {
+export function build(opts = {}, database: Database) {
   const server = fastify(opts);
+  const { getUsersData, updateUsersData } = database;
 
   server.get("/api/users", async (request, response) => {
     try {
       const data = await getUsersData();
       const parsedUsers = usersSchema.parse(data);
       response
-        .code(200) //问题: header已经自动生成了 content-length, type, date, 可以省略自己输入header吗?
+        .code(200) //问题: header is automatically generated (content-length, type, date,). without header here ? yes?
         .send(parsedUsers);
     } catch (error) {
       server.log.error(error);
       if (error.code < 500) {
         response.code(error.code).send(error);
       } else {
-        response.code(500).send("Something in the server can't work."); //思考: 怎么设置才能更好的处理send的error
+        response.code(500).send("Something in the server can't work.");
       }
     }
   });
@@ -37,11 +36,9 @@ export function build(opts = {}) {
     // },
     async (request, response) => {
       try {
-        const data = await getUsersData();
-        const parsedUsers = usersSchema.parse(data);
         const parsedNewUser = userSchema.safeParse(request.body);
         if (!parsedNewUser.success) {
-          return response.send({
+          return response.code(400).send({
             statusCode: 400,
             code: "FST_ERR_VALIDATION",
             statusText: "Bad Request",
@@ -49,16 +46,22 @@ export function build(opts = {}) {
             schema: userJsonSchema,
           });
         }
+        const data = await getUsersData();
+        const parsedUsers = usersSchema.parse(data);
         parsedUsers.push(parsedNewUser.data);
         const promise = await updateUsersData(parsedUsers);
-        if (promise === undefined)
-          response.code(201).send("resource created successfully");
+        if (promise === "success") {
+          response.code(201).send("Resource created successfully.");
+        }
+        return response
+          .code(500)
+          .send("Something in the database didn't work.");
       } catch (error) {
         server.log.error(error);
         if (error.code < 500) {
           response.code(error.code).send(error);
         } else {
-          response.code(500).send("Something in the server can't work."); //思考: 怎么设置才能更好的处理send的error
+          response.code(500).send("Something in the server can't work."); //问题: is it ok?
         }
       }
     }
@@ -73,11 +76,9 @@ export function build(opts = {}) {
     // },
     async (request, response) => {
       try {
-        const data = await getUsersData();
-        const parsedUsers = usersSchema.parse(data);
         const parsedNewUser = userSchema.safeParse(request.body);
         if (!parsedNewUser.success) {
-          return response.send({
+          return response.code(400).send({
             statusCode: 400,
             code: "FST_ERR_VALIDATION",
             statusText: "Bad Request",
@@ -85,6 +86,8 @@ export function build(opts = {}) {
             schema: userJsonSchema,
           });
         }
+        const data = await getUsersData();
+        const parsedUsers = usersSchema.parse(data);
         if (!parsedUsers.some((user) => user.id === parsedNewUser.data.id)) {
           return response
             .code(404)
@@ -100,14 +103,18 @@ export function build(opts = {}) {
               }
         );
         const promise = await updateUsersData(updatedUsers);
-        if (promise === undefined)
-          response.code(200).send("resource updated successfully");
+        if (promise === "success") {
+          return response.code(200).send("Resource updated successfully.");
+        }
+        return response
+          .code(500)
+          .send("Something in the database didn't work.");
       } catch (error) {
         server.log.error(error);
         if (error.code < 500) {
           response.code(error.code).send(error);
         } else {
-          response.code(500).send("Something in the server can't work."); //思考: 怎么设置才能更好的处理send的error
+          response.code(500).send("Something in the server can't work."); //TO DO:
         }
       }
     }
@@ -118,8 +125,6 @@ export function build(opts = {}) {
     // { schema: { body: idJsonSchema } },//思考: 能不能以后写回来
     async (request, response) => {
       try {
-        const data = await getUsersData();
-        const parsedUsers = usersSchema.parse(data);
         const parsedId = idSchema.safeParse(request.body);
         if (!parsedId.success) {
           return response.code(400).send({
@@ -130,6 +135,8 @@ export function build(opts = {}) {
             schema: idJsonSchema,
           });
         }
+        const data = await getUsersData();
+        const parsedUsers = usersSchema.parse(data);
         if (!parsedUsers.some((user) => user.id === parsedId.data.id)) {
           return response
             .code(404)
@@ -139,30 +146,21 @@ export function build(opts = {}) {
           (user) => user.id !== parsedId.data.id
         );
         const promise = await updateUsersData(updatedUsers);
-        if (promise === undefined)
-          response.code(200).send("resource deleted successfully");
+        if (promise === "success") {
+          response.code(200).send("Resource deleted successfully.");
+        }
+        return response
+          .code(500)
+          .send("Something in the database didn't work.");
       } catch (error) {
         server.log.error(error);
         if (error.code < 500) {
           response.code(error.code).send(error);
         } else {
-          response.code(500).send("Something in the server can't work."); //思考: 怎么设置才能更好的处理send的error
+          response.code(500).send("Something in the server can't work."); //TO DO:
         }
       }
     }
   );
   return server;
-}
-
-async function getUsersData(): Promise<User[]> {
-  const data = JSON.parse(await fs.readFile(filePath, "utf-8"));
-  return data; //问题: 需要设定promise的type,类似fetchUsers那样来返回一个标准化的promise吗? 我个人觉得不用
-}
-
-async function updateUsersData(updatedUsers: User[]): Promise<void> {
-  const updatedData = new Uint8Array(
-    Buffer.from(JSON.stringify(updatedUsers, undefined, 2))
-  );
-  const promise = await fs.writeFile(filePath, updatedData, "utf-8");
-  return promise;
 }

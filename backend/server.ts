@@ -1,15 +1,19 @@
 import { build } from "./app.js";
+import * as database from "./database.js";
 
 ("use strict");
 
-const server = build({
-  logger: {
-    level: "info",
-    transport: {
-      target: "pino-pretty",
+const server = build(
+  {
+    logger: {
+      level: "info",
+      transport: {
+        target: "pino-pretty",
+      },
     },
   },
-});
+  database
+);
 
 try {
   await server.listen({ port: 3000 });
